@@ -1,0 +1,110 @@
+[
+  {"id": "e01", "today": "2026-10-04",
+   "text": "这周六下午想带爸妈出去走走，别太累，人均一百五以内，最好能坐下吃个饭",
+   "stated": {"travel_date": "2026-10-10", "budget_per_person": 150, "include_meal": true},
+   "unstated": ["city", "group_size", "tags", "indoor", "rain", "start_time", "end_time"]},
+
+  {"id": "e02", "today": "2026-10-04",
+   "text": "我们4个人，11月21号去杭州，预算每个人200，想去拍照和逛文化的地方",
+   "stated": {"city": "杭州", "travel_date": "2026-11-21", "budget_per_person": 200,
+              "group_size": 4, "tags": ["拍照", "文化"]},
+   "unstated": ["indoor", "rain", "start_time", "end_time", "include_meal"]},
+
+  {"id": "e03", "today": "2026-10-04",
+   "text": "明天下雨的话就找个室内的地方待着吧",
+   "stated": {"travel_date": "2026-10-05", "rain": true, "indoor": true},
+   "unstated": ["city", "budget_per_person", "group_size", "tags", "start_time", "end_time", "include_meal"]},
+
+  {"id": "e04", "today": "2026-10-04",
+   "text": "下周六想出去玩，预算100左右",
+   "stated": {"travel_date": "2026-10-17", "budget_per_person": 100},
+   "unstated": ["city", "group_size", "tags", "indoor", "rain", "start_time", "end_time", "include_meal"]},
+
+  {"id": "e05", "today": "2026-10-04",
+   "text": "两个人，中午12点开始，玩到下午5点，大概花个80块吧",
+   "stated": {"group_size": 2, "start_time": "12:00", "end_time": "17:00", "budget_per_person": 80},
+   "unstated": ["city", "travel_date", "tags", "indoor", "rain", "include_meal"]},
+
+  {"id": "e06", "today": "2026-10-04",
+   "text": "就我一个人，随便走走，不要室内的",
+   "stated": {"group_size": 1, "indoor": false},
+   "unstated": ["city", "travel_date", "budget_per_person", "tags", "rain", "start_time", "end_time", "include_meal"]},
+
+  {"id": "e07", "today": "2026-10-04",
+   "text": "11月21号，两个人，预算300，中午想吃个饭，最好有拍照的地方",
+   "stated": {"travel_date": "2026-11-21", "group_size": 2, "budget_per_person": 300,
+              "include_meal": true, "tags": ["拍照"]},
+   "unstated": ["city", "indoor", "rain", "start_time", "end_time"]},
+
+  {"id": "e08", "today": "2026-10-04",
+   "text": "想去杭州玩一天，随便安排",
+   "stated": {"city": "杭州"},
+   "unstated": ["travel_date", "budget_per_person", "group_size", "tags", "indoor", "rain", "start_time", "end_time", "include_meal"]},
+
+  {"id": "e09", "today": "2026-10-04",
+   "text": "预算不多，三个人，每人最多五十，玩三个小时左右",
+   "stated": {"group_size": 3, "budget_per_person": 50},
+   "unstated": ["city", "travel_date", "tags", "indoor", "rain", "start_time", "end_time", "include_meal"]},
+
+  {"id": "e10", "today": "2026-10-05",
+   "text": "周六上午10点出发，晚上六点结束，四个人，预算1000",
+   "stated": {"travel_date": "2026-10-10", "start_time": "10:00", "end_time": "18:00",
+              "group_size": 4, "budget_per_person": 1000},
+   "unstated": ["city", "tags", "indoor", "rain", "include_meal"]},
+
+  {"id": "e11", "today": "2026-10-04",
+   "text": "11月14号下大雨，只能室内活动，预算150，两个人",
+   "stated": {"travel_date": "2026-11-14", "rain": true, "indoor": true,
+              "budget_per_person": 150, "group_size": 2},
+   "unstated": ["city", "tags", "start_time", "end_time", "include_meal"]},
+
+  {"id": "e12", "today": "2026-10-04",
+   "text": "喜欢手作和看书，11月21号，一个人，预算200",
+   "stated": {"tags": ["手作", "阅读"], "travel_date": "2026-11-21",
+              "group_size": 1, "budget_per_person": 200},
+   "unstated": ["city", "indoor", "rain", "start_time", "end_time", "include_meal"]},
+
+  {"id": "e13", "today": "2026-10-04",
+   "text": "预算500，其他你看着办",
+   "stated": {"budget_per_person": 500},
+   "unstated": ["city", "travel_date", "group_size", "tags", "indoor", "rain", "start_time", "end_time", "include_meal"]},
+
+  {"id": "e14", "today": "2026-10-04",
+   "text": "11月21号下午1点到5点，三个人",
+   "stated": {"travel_date": "2026-11-21", "start_time": "13:00", "end_time": "17:00", "group_size": 3},
+   "unstated": ["city", "budget_per_person", "tags", "indoor", "rain", "include_meal"]},
+
+  {"id": "e15", "today": "2026-10-04",
+   "text": "11月21号，两个人，预算100，不用管饭",
+   "stated": {"travel_date": "2026-11-21", "group_size": 2, "budget_per_person": 100, "include_meal": false},
+   "unstated": ["city", "tags", "indoor", "rain", "start_time", "end_time"]},
+
+  {"id": "e16", "today": "2026-10-04",
+   "text": "想在外面骑车，11月21号，两个人，预算150",
+   "stated": {"indoor": false, "tags": ["运动"], "travel_date": "2026-11-21",
+              "group_size": 2, "budget_per_person": 150},
+   "unstated": ["city", "rain", "start_time", "end_time", "include_meal"]},
+
+  {"id": "e17", "today": "2026-10-07",
+   "text": "下周三，四个人，预算400，去拍照",
+   "stated": {"travel_date": "2026-10-14", "group_size": 4, "budget_per_person": 400, "tags": ["拍照"]},
+   "unstated": ["city", "indoor", "rain", "start_time", "end_time", "include_meal"]},
+
+  {"id": "e18", "today": "2026-10-04",
+   "text": "11月21号带小孩去玩，室内，预算300，两个人，要吃饭",
+   "stated": {"travel_date": "2026-11-21", "indoor": true, "budget_per_person": 300,
+              "group_size": 2, "include_meal": true, "tags": ["亲子"]},
+   "unstated": ["city", "rain", "start_time", "end_time"]},
+
+  {"id": "e19", "today": "2026-10-04",
+   "text": "帮我安排一下",
+   "stated": {},
+   "unstated": ["city", "travel_date", "budget_per_person", "group_size", "tags", "indoor", "rain", "start_time", "end_time", "include_meal"]},
+
+  {"id": "e20", "today": "2026-10-04",
+   "text": "10月31号，我们五个人去杭州，人均预算250，想拍照、逛文化街区，中午要吃饭，早上9点半开始，玩到晚上7点，不要室内",
+   "stated": {"travel_date": "2026-10-31", "city": "杭州", "group_size": 5, "budget_per_person": 250,
+              "tags": ["拍照", "文化"], "include_meal": true, "start_time": "09:30", "end_time": "19:00",
+              "indoor": false},
+   "unstated": ["rain"]}
+]

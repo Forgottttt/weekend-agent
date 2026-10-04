@@ -22,6 +22,9 @@ def parser():
     action.add_argument("--legacy-demo", action="store_true", help="第一版半天固定示例，供早期课程对照")
     action.add_argument("--doctor", action="store_true", help="离线检查模型配置，不联网、不显示密钥")
     action.add_argument("--check-api", action="store_true", help="两轮真实API请求，验证一次天气工具调用及结果回传，会消耗API额度")
+    action.add_argument("--ask", metavar="文本", help="用一句自然语言描述条件，由模型抽取槽位后规划（需要 --live）")
+    result.add_argument("--suite", choices=["agent", "extraction", "retrieval", "all"], default="agent",
+                        help="--evaluate 运行的评测套件，默认 agent")
     result.add_argument("--port", type=int, default=8765)
     result.add_argument("--topic", default="tools")
     result.add_argument("--count", type=int, default=3)
@@ -57,6 +60,50 @@ def print_result(result, output_dir):
         print("会话 ID：", result["session_id"])
 
 
+def request_values(args) -> dict:
+    """把命令行参数整理成表单条件，供规划和抽取合并共用。"""
+    return {"budget_per_person": args.budget, "group_size": args.group_size,
+            "travel_date": args.date, "start_time": args.start, "end_time": args.end,
+            "tags": [tag.strip() for tag in args.tags.replace("，", ",").split(",") if tag.strip()],
+            "rain": args.rain, "include_meal": not args.no_meal,
+            "indoor": {"any": None, "inside": True, "outside": False}[args.indoor]}
+
+
+def run_evaluate(args, mode: str) -> int:
+    """按套件运行评测。抽取套件必须用真实模型，否则没有可评测的对象。"""
+    outcomes: list[bool] = []
+    if args.suite in ("agent", "all"):
+        from .evaluation import evaluate
+        report = evaluate(mode, args.output_dir)
+        print(f"{report['mode']} 回归：{report['passed']}/{report['case_count']}；模型请求 {report['model_calls']} 次。")
+        print(report["limitations"])
+        print("报告：", report["report_path"])
+        outcomes.append(report["passed"] == report["case_count"])
+    if args.suite in ("extraction", "all"):
+        if mode != "live":
+            print("槽位抽取评测需要真实模型，请加 --live。")
+            return 1
+        from .extraction_eval import evaluate_extraction
+        report = evaluate_extraction(output_dir=args.output_dir)
+        print(f"抽取评测：{report['case_count']} 例，模型请求 {report['model_calls']} 次。")
+        print(f"  槽位准确率     {report['slot_accuracy']:.1%}（{report['correct_slots']}/{report['stated_slots']}）")
+        print(f"  幻觉误填率     {report['hallucination_rate']:.1%}（{report['hallucinated_slots']}/{report['unstated_slots']} 个未声明槽位）")
+        print(f"  追问触发正确率 {report['clarification_accuracy']:.1%}（{report['clarification_correct_cases']}/{report['case_count']}）")
+        print(report["limitations"])
+        print("报告：", report["report_path"])
+        outcomes.append(report["errors"] == 0)
+    if args.suite in ("retrieval", "all"):
+        from .retrieval_eval import evaluate_retrieval
+        report = evaluate_retrieval(output_dir=args.output_dir)
+        bm25, tfidf = report["bm25"], report["tfidf"]
+        print(f"检索评测：{report['corpus_size']} 篇语料 / {report['case_count']} 条标注查询，top_k={report['top_k']}。")
+        print(f"  BM25   recall@k {bm25['recall_at_k']:.1%}  MRR {bm25['mrr']:.3f}")
+        print(f"  TF-IDF recall@k {tfidf['recall_at_k']:.1%}  MRR {tfidf['mrr']:.3f}")
+        print(report["limitations"])
+        print("报告：", report["report_path"])
+    return 0 if all(outcomes) else 1
+
+
 def main(argv=None):
     args = parser().parse_args(argv)
     mode = "live" if args.live else "demo"
@@ -71,12 +118,7 @@ def main(argv=None):
             serve(args.port)
             return 0
         if args.evaluate:
-            from .evaluation import evaluate
-            report = evaluate(mode, args.output_dir)
-            print(f"{report['mode']} 回归：{report['passed']}/{report['case_count']}；模型请求 {report['model_calls']} 次。")
-            print(report["limitations"])
-            print("报告：", report["report_path"])
-            return 0 if report["passed"] == report["case_count"] else 1
+            return run_evaluate(args, mode)
         if args.practice:
             from .interview import practice
             if not 1 <= args.count <= 20:
@@ -90,16 +132,30 @@ def main(argv=None):
             run = TripAgent(DemoProvider(args.budget, args.rain), ToolRegistry(TripTools(rain=args.rain))).run("旧版固定示例")
             show_result(run, args.output_dir, "demo")
             return 0
-        values = {"budget_per_person": args.budget, "group_size": args.group_size,
-                  "travel_date": args.date, "start_time": args.start, "end_time": args.end,
-                  "tags": [tag.strip() for tag in args.tags.replace("，", ",").split(",") if tag.strip()],
-                  "rain": args.rain, "include_meal": not args.no_meal,
-                  "indoor": {"any": None, "inside": True, "outside": False}[args.indoor]}
+        values = request_values(args)
         service = PlanningService(args.output_dir / "sessions.sqlite3")
         session_id = args.session
         if session_id:
             values = service.store.load(session_id)["request"]
         question = args.question
+        if args.ask is not None:
+            if mode != "live":
+                print("自然语言条件抽取需要真实模型，请加 --live。")
+                return 1
+            from .config import ModelConfig
+            from .extraction import (clarification, extract_slots, merge,
+                                     missing_slots, provided_slots)
+            from .providers import APIProvider
+            slots = extract_slots(args.ask, APIProvider(ModelConfig.from_env()))
+            provided = provided_slots(slots)
+            print("从这句话抽取到的条件：", json.dumps(provided, ensure_ascii=False))
+            absent = missing_slots(provided)
+            if absent:
+                print(clarification(absent))
+                return 2
+            values = merge(values, provided)
+            question = args.ask
+            print("已合并进表单条件，开始规划。")
         while True:
             result = service.plan(values, question, mode, session_id)
             session_id = result["session_id"]

@@ -11,6 +11,7 @@ from weekend_agent.agent import TripAgent
 from weekend_agent.config import ModelConfig
 from weekend_agent.evaluation import evaluate
 from weekend_agent.finalize import verify_final
+from weekend_agent.jsonio import parse_json_object
 from weekend_agent.memory import SessionStore, select_context
 from weekend_agent.providers import APIProvider, tool_call
 from weekend_agent.request import TripRequest
@@ -82,6 +83,43 @@ class FinalTests(unittest.TestCase):
         request = TripRequest.from_dict({"indoor": True, "include_meal": False})
         with self.assertRaisesRegex(ValueError, "室内"):
             verify_final(self.candidate("p01", "10:00"), request, self.registry, {"p01"}, {})
+
+    def test_fenced_json_is_accepted(self):
+        # 真实模型常把最终 JSON 包在 Markdown 代码围栏里。
+        # 解析层剥离围栏，就不必再浪费一轮完整上下文去纠正格式。
+        fenced = "```json\n" + self.candidate() + "\n```"
+        plan = verify_final(fenced, TripRequest(), self.registry, {"f04"}, {})
+        self.assertEqual(plan["status"], "planned")
+
+    def test_plain_fence_and_surrounding_text_are_accepted(self):
+        wrapped = "好的，这是最终方案：\n```\n" + self.candidate() + "\n```\n请查收。"
+        self.assertEqual(verify_final(wrapped, TripRequest(), self.registry, {"f04"}, {})["status"], "planned")
+
+    def test_unparsable_answer_gets_readable_error(self):
+        with self.assertRaisesRegex(ValueError, "不是合法 JSON"):
+            verify_final("我建议去示例面馆。", TripRequest(), self.registry, {"f04"}, {})
+
+    def test_json_after_leading_explanation_is_accepted(self):
+        # 真实模型实测输出：先一段英文确认文字，再给裸 JSON，且没有 Markdown 围栏。
+        content = ("Confirmed: even the minimum costs 27/person > 20 budget. "
+                   "No valid itinerary exists under the form's constraints.\n\n"
+                   '{"status": "no_plan", "stops": [], "guide_ids": []}')
+        plan = verify_final(content, TripRequest(), self.registry, set(), {})
+        self.assertEqual(plan["status"], "no_plan")
+
+    def test_braces_inside_strings_do_not_truncate_the_object(self):
+        # 扫描配平花括号时必须跳过字符串字面量，否则会在 "预算{100}" 处提前截断，
+        # 表现为 JSON 解析失败。
+        content = '说明：{"note": "预算{100}以内"}'
+        self.assertEqual(parse_json_object(content)["note"], "预算{100}以内")
+
+    def test_parse_error_tells_the_model_not_to_use_fences(self):
+        try:
+            verify_final("抱歉，我无法给出 JSON。", TripRequest(), self.registry, {"f04"}, {})
+        except ValueError as error:
+            self.assertIn("Markdown 代码围栏", str(error))
+        else:
+            self.fail("应当抛出 ValueError")
 
 
 class ProtocolTests(unittest.TestCase):
@@ -214,10 +252,10 @@ class HTTPTests(unittest.TestCase):
         self.thread.join()
         self.folder.cleanup()
 
-    def post(self, body, origin=None):
+    def post(self, body, origin=None, path="/api/plan"):
         headers = {"Content-Type": "application/json"}
         if origin: headers["Origin"] = origin
-        return urlopen(Request(self.base + "/api/plan", data=json.dumps(body).encode(), headers=headers))
+        return urlopen(Request(self.base + path, data=json.dumps(body).encode(), headers=headers))
 
     def test_plan_and_restore_over_http(self):
         with self.post({"request": {"rain": True}}) as response:
@@ -246,6 +284,46 @@ class HTTPTests(unittest.TestCase):
             self.post({"request": {}}, origin="https://example.invalid")
         self.assertEqual(error.exception.code, 403)
         error.exception.close()
+
+    def test_extract_rejects_demo_mode_and_unknown_fields(self):
+        # 抽取必须有真实模型；离线模式只能按表单运行。
+        with self.assertRaises(HTTPError) as error:
+            self.post({"text": "两个人去玩", "mode": "demo"}, path="/api/extract")
+        self.assertEqual(error.exception.code, 400)
+        error.exception.close()
+        with self.assertRaises(HTTPError) as error:
+            self.post({"text": "两个人去玩", "mode": "live", "budget": 100}, path="/api/extract")
+        self.assertEqual(error.exception.code, 400)
+        error.exception.close()
+
+    def test_extract_reports_missing_key_as_client_error(self):
+        with patch("weekend_agent.config.ModelConfig.from_env",
+                   side_effect=ValueError("尚未设置 LLM_API_KEY")):
+            with self.assertRaises(HTTPError) as error:
+                self.post({"text": "两个人去玩", "mode": "live"}, path="/api/extract")
+            self.assertEqual(error.exception.code, 400)
+            self.assertIn("LLM_API_KEY", error.exception.read().decode())
+            error.exception.close()
+
+    def test_extract_returns_slots_and_clarification(self):
+        content = json.dumps({"city": None, "travel_date": None, "budget_per_person": 150,
+                              "group_size": None, "tags": None, "indoor": None, "rain": None,
+                              "start_time": None, "end_time": None, "include_meal": None})
+
+        class FakeProvider:
+            def __init__(self, config): pass
+
+            def complete(self, messages, tools):
+                return {"role": "assistant", "content": content}
+
+        config = ModelConfig("fake-key", "https://api.deepseek.com", "deepseek-flash")
+        with patch("weekend_agent.providers.APIProvider", FakeProvider), \
+                patch("weekend_agent.config.ModelConfig.from_env", return_value=config):
+            with self.post({"text": "人均一百五", "mode": "live"}, path="/api/extract") as response:
+                result = json.load(response)
+        self.assertEqual(result["provided"], {"budget_per_person": 150})
+        self.assertEqual(sorted(result["missing"]), ["group_size", "travel_date"])
+        self.assertIn("出行日期", result["question"])
 
 
 if __name__ == "__main__":

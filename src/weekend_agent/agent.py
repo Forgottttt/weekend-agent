@@ -80,7 +80,9 @@ class TripAgent:
                     try:
                         plan = verify_final(answer, request, self.registry, place_ids, guides)
                     except (ValueError, TypeError, KeyError) as error:
-                        events.append({"kind": "final_rejected", "error": str(error)})
+                        # 记录被拒原文的开头，否则事后无法判断是格式问题还是业务冲突。
+                        events.append({"kind": "final_rejected", "error": str(error),
+                                       "content_preview": answer[:200]})
                         if final_checks >= 3:
                             raise RuntimeError("最终方案连续三次未通过应用校验") from None
                         self.messages.append({"role": "user", "content":

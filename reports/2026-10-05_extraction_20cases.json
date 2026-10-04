@@ -1,0 +1,487 @@
+{
+  "dataset": "extraction_cases_v1_20",
+  "case_count": 20,
+  "errors": 0,
+  "model_calls": 20,
+  "slot_accuracy": 0.9595,
+  "stated_slots": 74,
+  "correct_slots": 71,
+  "hallucination_rate": 0.0317,
+  "unstated_slots": 126,
+  "hallucinated_slots": 4,
+  "clarification_accuracy": 0.95,
+  "clarification_correct_cases": 19,
+  "median_seconds": 1.071,
+  "limitations": "20 例小样本，标签由本仓库作者人工标注，标注口径以「用户明确说到」为准，兴趣标签的归类存在判断余地；因此这些数字反映的是本项目抽取口径下的相对表现，不是通用抽取能力评测。",
+  "cases": [
+    {
+      "id": "e01",
+      "text": "这周六下午想带爸妈出去走走，别太累，人均一百五以内，最好能坐下吃个饭",
+      "stated_total": 3,
+      "unstated_total": 7,
+      "provided": {
+        "travel_date": "2026-10-10",
+        "budget_per_person": 150,
+        "group_size": 3,
+        "tags": [
+          "散步"
+        ],
+        "include_meal": true
+      },
+      "correct": 3,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [
+        "group_size",
+        "tags"
+      ],
+      "expect_clarification": true,
+      "asked_clarification": false,
+      "clarification_correct": false,
+      "question": null,
+      "duration_seconds": 1.083
+    },
+    {
+      "id": "e02",
+      "text": "我们4个人，11月21号去杭州，预算每个人200，想去拍照和逛文化的地方",
+      "stated_total": 5,
+      "unstated_total": 5,
+      "provided": {
+        "city": "杭州",
+        "travel_date": "2026-11-21",
+        "budget_per_person": 200,
+        "group_size": 4,
+        "tags": [
+          "拍照",
+          "文化"
+        ]
+      },
+      "correct": 5,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": false,
+      "asked_clarification": false,
+      "clarification_correct": true,
+      "question": null,
+      "duration_seconds": 0.897
+    },
+    {
+      "id": "e03",
+      "text": "明天下雨的话就找个室内的地方待着吧",
+      "stated_total": 3,
+      "unstated_total": 7,
+      "provided": {
+        "travel_date": "2026-10-05",
+        "indoor": true,
+        "rain": true
+      },
+      "correct": 3,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": true,
+      "asked_clarification": true,
+      "clarification_correct": true,
+      "question": "还需要你确认：每人预算、同行人数。补充之后我再生成安排。",
+      "duration_seconds": 1.284
+    },
+    {
+      "id": "e04",
+      "text": "下周六想出去玩，预算100左右",
+      "stated_total": 2,
+      "unstated_total": 8,
+      "provided": {
+        "travel_date": "2026-10-10",
+        "budget_per_person": 100
+      },
+      "correct": 1,
+      "wrong": 1,
+      "wrong_slots": [
+        {
+          "slot": "travel_date",
+          "expected": "2026-10-17",
+          "actual": "2026-10-10"
+        }
+      ],
+      "hallucinated": [],
+      "expect_clarification": true,
+      "asked_clarification": true,
+      "clarification_correct": true,
+      "question": "还需要你确认：同行人数。补充之后我再生成安排。",
+      "duration_seconds": 0.963
+    },
+    {
+      "id": "e05",
+      "text": "两个人，中午12点开始，玩到下午5点，大概花个80块吧",
+      "stated_total": 4,
+      "unstated_total": 6,
+      "provided": {
+        "budget_per_person": 80,
+        "group_size": 2,
+        "start_time": "12:00",
+        "end_time": "17:00"
+      },
+      "correct": 4,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": true,
+      "asked_clarification": true,
+      "clarification_correct": true,
+      "question": "还需要你确认：出行日期。补充之后我再生成安排。",
+      "duration_seconds": 1.049
+    },
+    {
+      "id": "e06",
+      "text": "就我一个人，随便走走，不要室内的",
+      "stated_total": 2,
+      "unstated_total": 8,
+      "provided": {
+        "group_size": 1,
+        "tags": [
+          "散步"
+        ],
+        "indoor": false
+      },
+      "correct": 2,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [
+        "tags"
+      ],
+      "expect_clarification": true,
+      "asked_clarification": true,
+      "clarification_correct": true,
+      "question": "还需要你确认：出行日期、每人预算。补充之后我再生成安排。",
+      "duration_seconds": 1.05
+    },
+    {
+      "id": "e07",
+      "text": "11月21号，两个人，预算300，中午想吃个饭，最好有拍照的地方",
+      "stated_total": 5,
+      "unstated_total": 5,
+      "provided": {
+        "travel_date": "2026-11-21",
+        "budget_per_person": 300,
+        "group_size": 2,
+        "tags": [
+          "拍照",
+          "美食"
+        ],
+        "include_meal": true
+      },
+      "correct": 4,
+      "wrong": 1,
+      "wrong_slots": [
+        {
+          "slot": "tags",
+          "expected": [
+            "拍照"
+          ],
+          "actual": [
+            "拍照",
+            "美食"
+          ]
+        }
+      ],
+      "hallucinated": [],
+      "expect_clarification": false,
+      "asked_clarification": false,
+      "clarification_correct": true,
+      "question": null,
+      "duration_seconds": 1.136
+    },
+    {
+      "id": "e08",
+      "text": "想去杭州玩一天，随便安排",
+      "stated_total": 1,
+      "unstated_total": 9,
+      "provided": {
+        "city": "杭州"
+      },
+      "correct": 1,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": true,
+      "asked_clarification": true,
+      "clarification_correct": true,
+      "question": "还需要你确认：出行日期、每人预算、同行人数。补充之后我再生成安排。",
+      "duration_seconds": 0.966
+    },
+    {
+      "id": "e09",
+      "text": "预算不多，三个人，每人最多五十，玩三个小时左右",
+      "stated_total": 2,
+      "unstated_total": 8,
+      "provided": {
+        "budget_per_person": 50,
+        "group_size": 3
+      },
+      "correct": 2,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": true,
+      "asked_clarification": true,
+      "clarification_correct": true,
+      "question": "还需要你确认：出行日期。补充之后我再生成安排。",
+      "duration_seconds": 1.185
+    },
+    {
+      "id": "e10",
+      "text": "周六上午10点出发，晚上六点结束，四个人，预算1000",
+      "stated_total": 5,
+      "unstated_total": 5,
+      "provided": {
+        "travel_date": "2026-10-10",
+        "budget_per_person": 250,
+        "group_size": 4,
+        "start_time": "10:00",
+        "end_time": "18:00",
+        "include_meal": false
+      },
+      "correct": 4,
+      "wrong": 1,
+      "wrong_slots": [
+        {
+          "slot": "budget_per_person",
+          "expected": 1000,
+          "actual": 250
+        }
+      ],
+      "hallucinated": [
+        "include_meal"
+      ],
+      "expect_clarification": false,
+      "asked_clarification": false,
+      "clarification_correct": true,
+      "question": null,
+      "duration_seconds": 1.078
+    },
+    {
+      "id": "e11",
+      "text": "11月14号下大雨，只能室内活动，预算150，两个人",
+      "stated_total": 5,
+      "unstated_total": 5,
+      "provided": {
+        "travel_date": "2026-11-14",
+        "budget_per_person": 150,
+        "group_size": 2,
+        "indoor": true,
+        "rain": true
+      },
+      "correct": 5,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": false,
+      "asked_clarification": false,
+      "clarification_correct": true,
+      "question": null,
+      "duration_seconds": 1.072
+    },
+    {
+      "id": "e12",
+      "text": "喜欢手作和看书，11月21号，一个人，预算200",
+      "stated_total": 4,
+      "unstated_total": 6,
+      "provided": {
+        "travel_date": "2026-11-21",
+        "budget_per_person": 200,
+        "group_size": 1,
+        "tags": [
+          "手作",
+          "阅读"
+        ]
+      },
+      "correct": 4,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": false,
+      "asked_clarification": false,
+      "clarification_correct": true,
+      "question": null,
+      "duration_seconds": 0.914
+    },
+    {
+      "id": "e13",
+      "text": "预算500，其他你看着办",
+      "stated_total": 1,
+      "unstated_total": 9,
+      "provided": {
+        "budget_per_person": 500
+      },
+      "correct": 1,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": true,
+      "asked_clarification": true,
+      "clarification_correct": true,
+      "question": "还需要你确认：出行日期、同行人数。补充之后我再生成安排。",
+      "duration_seconds": 1.031
+    },
+    {
+      "id": "e14",
+      "text": "11月21号下午1点到5点，三个人",
+      "stated_total": 4,
+      "unstated_total": 6,
+      "provided": {
+        "travel_date": "2026-11-21",
+        "group_size": 3,
+        "start_time": "13:00",
+        "end_time": "17:00"
+      },
+      "correct": 4,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": true,
+      "asked_clarification": true,
+      "clarification_correct": true,
+      "question": "还需要你确认：每人预算。补充之后我再生成安排。",
+      "duration_seconds": 0.708
+    },
+    {
+      "id": "e15",
+      "text": "11月21号，两个人，预算100，不用管饭",
+      "stated_total": 4,
+      "unstated_total": 6,
+      "provided": {
+        "travel_date": "2026-11-21",
+        "budget_per_person": 100,
+        "group_size": 2,
+        "include_meal": false
+      },
+      "correct": 4,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": false,
+      "asked_clarification": false,
+      "clarification_correct": true,
+      "question": null,
+      "duration_seconds": 1.134
+    },
+    {
+      "id": "e16",
+      "text": "想在外面骑车，11月21号，两个人，预算150",
+      "stated_total": 5,
+      "unstated_total": 5,
+      "provided": {
+        "travel_date": "2026-11-21",
+        "budget_per_person": 150,
+        "group_size": 2,
+        "tags": [
+          "运动"
+        ],
+        "indoor": false
+      },
+      "correct": 5,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": false,
+      "asked_clarification": false,
+      "clarification_correct": true,
+      "question": null,
+      "duration_seconds": 1.076
+    },
+    {
+      "id": "e17",
+      "text": "下周三，四个人，预算400，去拍照",
+      "stated_total": 4,
+      "unstated_total": 6,
+      "provided": {
+        "travel_date": "2026-10-14",
+        "budget_per_person": 400,
+        "group_size": 4,
+        "tags": [
+          "拍照"
+        ]
+      },
+      "correct": 4,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": false,
+      "asked_clarification": false,
+      "clarification_correct": true,
+      "question": null,
+      "duration_seconds": 0.87
+    },
+    {
+      "id": "e18",
+      "text": "11月21号带小孩去玩，室内，预算300，两个人，要吃饭",
+      "stated_total": 6,
+      "unstated_total": 4,
+      "provided": {
+        "travel_date": "2026-11-21",
+        "budget_per_person": 300,
+        "group_size": 2,
+        "tags": [
+          "亲子"
+        ],
+        "indoor": true,
+        "include_meal": true
+      },
+      "correct": 6,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": false,
+      "asked_clarification": false,
+      "clarification_correct": true,
+      "question": null,
+      "duration_seconds": 1.071
+    },
+    {
+      "id": "e19",
+      "text": "帮我安排一下",
+      "stated_total": 0,
+      "unstated_total": 10,
+      "provided": {},
+      "correct": 0,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": true,
+      "asked_clarification": true,
+      "clarification_correct": true,
+      "question": "还需要你确认：出行日期、每人预算、同行人数。补充之后我再生成安排。",
+      "duration_seconds": 1.171
+    },
+    {
+      "id": "e20",
+      "text": "10月31号，我们五个人去杭州，人均预算250，想拍照、逛文化街区，中午要吃饭，早上9点半开始，玩到晚上7点，不要室内",
+      "stated_total": 9,
+      "unstated_total": 1,
+      "provided": {
+        "city": "杭州",
+        "travel_date": "2026-10-31",
+        "budget_per_person": 250,
+        "group_size": 5,
+        "tags": [
+          "拍照",
+          "文化"
+        ],
+        "indoor": false,
+        "start_time": "09:30",
+        "end_time": "19:00",
+        "include_meal": true
+      },
+      "correct": 9,
+      "wrong": 0,
+      "wrong_slots": [],
+      "hallucinated": [],
+      "expect_clarification": false,
+      "asked_clarification": false,
+      "clarification_correct": true,
+      "question": null,
+      "duration_seconds": 0.932
+    }
+  ]
+}

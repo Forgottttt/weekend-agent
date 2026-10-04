@@ -1,0 +1,1726 @@
+{
+  "dataset": "retrieval_cases_v1_synthetic",
+  "corpus": "guides.json（6 篇手写 + 195 篇脚本生成）",
+  "case_count": 44,
+  "corpus_size": 201,
+  "top_k": 5,
+  "generated_at": "2026-10-05T00:27:19",
+  "bm25": {
+    "recall_at_k": 0.6705,
+    "mrr": 0.7064,
+    "hits": 33,
+    "misses": [
+      "q016",
+      "q017",
+      "q018",
+      "q020",
+      "q026",
+      "q027",
+      "q029",
+      "q030",
+      "q034",
+      "q036",
+      "q043"
+    ],
+    "top_k": 5
+  },
+  "tfidf": {
+    "recall_at_k": 0.6591,
+    "mrr": 0.7121,
+    "hits": 32,
+    "misses": [
+      "q016",
+      "q017",
+      "q018",
+      "q020",
+      "q026",
+      "q027",
+      "q029",
+      "q030",
+      "q034",
+      "q035",
+      "q036",
+      "q043"
+    ],
+    "top_k": 5
+  },
+  "limitations": "合成语料与自动标注：语料由 scripts/build_corpus.py 用固定随机种子生成，相关文档标签来自生成时的主题归属，不是人工撰写或人工标注；查询只有正例、没有负例和分级相关性，因此 recall@k 与 MRR 只反映 BM25 与 TF-IDF 在这套合成数据上的相对表现，不能推断真实检索质量，也不能用来证明某一种方法在真实场景更好。",
+  "cases": [
+    {
+      "id": "q001",
+      "query": "银戒敲花需要提前预约吗",
+      "relevant": [
+        "d0181"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0181",
+          "d0069",
+          "d0126",
+          "d0065",
+          "d0074"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0181",
+          "d0069",
+          "d0126",
+          "d0146",
+          "d0065"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q002",
+      "query": "棒针围巾的课程怎么安排",
+      "relevant": [
+        "d0186"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0186",
+          "d0151",
+          "d0191",
+          "d0182",
+          "d0188"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0186",
+          "d0151",
+          "d0191",
+          "d0182",
+          "d0184"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q003",
+      "query": "抱石墙和羽毛球场地哪个更适合新手",
+      "relevant": [
+        "d0062",
+        "d0061"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0061",
+          "d0062",
+          "d0071",
+          "d0072",
+          "d0151"
+        ],
+        "found": 2,
+        "ranks": [
+          2,
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0061",
+          "d0062",
+          "d0071",
+          "d0072",
+          "d0067"
+        ],
+        "found": 2,
+        "ranks": [
+          2,
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q004",
+      "query": "恐龙骨架在哪个展厅",
+      "relevant": [
+        "d0077"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0077",
+          "d0041",
+          "d0136",
+          "d0091",
+          "d0036"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0077",
+          "d0041",
+          "d0136",
+          "d0091",
+          "d0038"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q005",
+      "query": "手擀爆鱼面几点开始排队",
+      "relevant": [
+        "d0016"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0016",
+          "d0023",
+          "d0026",
+          "d0028",
+          "d0024"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0016",
+          "d0023",
+          "d0026",
+          "d0028",
+          "d0166"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q006",
+      "query": "常设版画展和旧书淘选区能连着逛吗",
+      "relevant": [
+        "d0091",
+        "d0092"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0091",
+          "d0092",
+          "d0121"
+        ],
+        "found": 2,
+        "ranks": [
+          1,
+          2
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0091",
+          "d0092",
+          "d0121"
+        ],
+        "found": 2,
+        "ranks": [
+          1,
+          2
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q007",
+      "query": "青瓷残片标本可以近距离看吗",
+      "relevant": [
+        "d0031"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0031",
+          "d0160",
+          "d0111",
+          "d0108",
+          "d0110"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0031",
+          "d0160",
+          "d0111",
+          "d0108",
+          "d0110"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q008",
+      "query": "摇橹船水道要走多久",
+      "relevant": [
+        "d0048"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0048",
+          "d0118",
+          "d0106",
+          "d0112",
+          "d0117"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0048",
+          "d0118",
+          "d0106",
+          "d0112",
+          "d0119"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q009",
+      "query": "免费常设展和公园年卡哪个更省钱",
+      "relevant": [
+        "d0121",
+        "d0123"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0121",
+          "d0123",
+          "d0135",
+          "d0128",
+          "d0054"
+        ],
+        "found": 2,
+        "ranks": [
+          1,
+          2
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0121",
+          "d0123",
+          "d0135",
+          "d0054",
+          "d0128"
+        ],
+        "found": 2,
+        "ranks": [
+          1,
+          2
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q010",
+      "query": "画舫夜游的讲解时长",
+      "relevant": [
+        "d0167"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0167",
+          "d0042",
+          "d0037",
+          "g_food",
+          "d0150"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0167",
+          "d0042",
+          "d0037",
+          "d0150",
+          "g_food"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q011",
+      "query": "竹编果篮的锁边做法",
+      "relevant": [
+        "d0155"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0155"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0155"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q012",
+      "query": "同站台换乘和出站通道有什么区别",
+      "relevant": [
+        "d0106",
+        "d0118"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0106",
+          "d0118",
+          "d0116",
+          "d0111",
+          "d0109"
+        ],
+        "found": 2,
+        "ranks": [
+          1,
+          2
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0106",
+          "d0118",
+          "d0116",
+          "d0111",
+          "d0109"
+        ],
+        "found": 2,
+        "ranks": [
+          1,
+          2
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q013",
+      "query": "两小时速览路线都看哪些展厅",
+      "relevant": [
+        "d0136"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0136",
+          "d0112",
+          "d0126",
+          "d0181",
+          "d0091"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0136",
+          "d0112",
+          "d0126",
+          "d0181",
+          "d0091"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q014",
+      "query": "胶片冲洗要预约哪个时段",
+      "relevant": [
+        "d0005"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0005",
+          "d0131",
+          "d0124",
+          "d0134",
+          "d0138"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0005",
+          "d0131",
+          "d0134",
+          "d0138",
+          "d0124"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q015",
+      "query": "自带帐篷位的场地费是多少",
+      "relevant": [
+        "d0132"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0132",
+          "d0070",
+          "d0170",
+          "d0013",
+          "d0061"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0132",
+          "d0070",
+          "d0170",
+          "d0013",
+          "d0061"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q016",
+      "query": "拍完的胶卷想自己动手洗出来，有这种地方吗",
+      "relevant": [
+        "d0005"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0039",
+          "d0134",
+          "d0118",
+          "d0054",
+          "d0001"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0039",
+          "d0134",
+          "d0118",
+          "d0054",
+          "d0001"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      }
+    },
+    {
+      "id": "q017",
+      "query": "想给对象做一枚自己敲出来的戒指，零基础也行吗",
+      "relevant": [
+        "d0181"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0135",
+          "d0134",
+          "d0118",
+          "d0054",
+          "d0048"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0135",
+          "d0134",
+          "d0118",
+          "d0054",
+          "d0122"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      }
+    },
+    {
+      "id": "q018",
+      "query": "雨天不想淋雨，只想找个能安静坐一下午还不花钱的地方",
+      "relevant": [
+        "d0097",
+        "d0121"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0166",
+          "d0177",
+          "d0180",
+          "d0172",
+          "g_rain"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "g_rain",
+          "d0166",
+          "d0177",
+          "d0180",
+          "d0172"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      }
+    },
+    {
+      "id": "q019",
+      "query": "想坐着慢慢喝一杯现磨的咖啡",
+      "relevant": [
+        "d0020"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0139",
+          "d0165",
+          "d0020",
+          "g_food",
+          "d0160"
+        ],
+        "found": 1,
+        "ranks": [
+          3
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 0.3333
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0139",
+          "d0165",
+          "d0020",
+          "g_food",
+          "d0160"
+        ],
+        "found": 1,
+        "ranks": [
+          3
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 0.3333
+      }
+    },
+    {
+      "id": "q020",
+      "query": "带五岁小孩玩水，冬天也能去的那种",
+      "relevant": [
+        "d0081"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0024",
+          "d0039",
+          "d0032",
+          "d0150",
+          "d0169"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0024",
+          "d0039",
+          "d0150",
+          "d0032",
+          "d0037"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      }
+    },
+    {
+      "id": "q021",
+      "query": "想喝一碗汤头透亮的清汤面",
+      "relevant": [
+        "d0022"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0022"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0022"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q022",
+      "query": "想爬到高处看整座城市的灯亮起来",
+      "relevant": [
+        "d0170"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0006",
+          "d0170",
+          "d0097",
+          "d0175",
+          "d0042"
+        ],
+        "found": 1,
+        "ranks": [
+          2
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 0.5
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0170",
+          "d0006",
+          "d0097",
+          "d0175",
+          "d0042"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q023",
+      "query": "不想爬楼梯，最好有电梯直接上去看画",
+      "relevant": [
+        "d0091"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0091",
+          "d0118",
+          "d0049",
+          "d0136",
+          "d0170"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0091",
+          "d0118",
+          "d0049",
+          "d0136",
+          "d0170"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q024",
+      "query": "一群人想玩点动脑子的游戏，最好有店员教",
+      "relevant": [
+        "d0093"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0093",
+          "d0092",
+          "d0170",
+          "d0165",
+          "d0150"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0093",
+          "d0092",
+          "d0170",
+          "d0150",
+          "d0138"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q025",
+      "query": "想带爸妈听一段本地的老录音",
+      "relevant": [
+        "d0034"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0034",
+          "d0132",
+          "d0045",
+          "d0046",
+          "d0056"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0034",
+          "d0045",
+          "d0132",
+          "d0046",
+          "d0056"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q026",
+      "query": "想把去过的地方做成小磁贴带回家",
+      "relevant": [
+        "d0154"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0180",
+          "d0172",
+          "d0166",
+          "d0174",
+          "d0171"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0180",
+          "d0172",
+          "d0166",
+          "d0174",
+          "d0171"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      }
+    },
+    {
+      "id": "q027",
+      "query": "坐了一上午办公室，想找个地方拉伸一下",
+      "relevant": [
+        "d0069"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0137",
+          "d0144",
+          "d0145",
+          "d0146",
+          "d0140"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0137",
+          "d0144",
+          "d0039",
+          "d0146",
+          "g_route"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      }
+    },
+    {
+      "id": "q028",
+      "query": "想学不用钉子的老式接合做法",
+      "relevant": [
+        "d0183"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0183",
+          "d0157",
+          "d0118",
+          "d0062",
+          "d0091"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0183",
+          "d0157",
+          "d0118",
+          "d0062",
+          "d0091"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q029",
+      "query": "想拍鸟但又不想走远，有没有固定机位",
+      "relevant": [
+        "d0012"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0074",
+          "d0010",
+          "d0007",
+          "d0004",
+          "d0006"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0074",
+          "d0010",
+          "d0006",
+          "d0007",
+          "d0004"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      }
+    },
+    {
+      "id": "q030",
+      "query": "雨天上午看展，中午吃面，下午找地方做手作",
+      "relevant": [
+        "d0091",
+        "d0016",
+        "d0094"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0137",
+          "d0079",
+          "d0031",
+          "d0034",
+          "d0039"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0137",
+          "d0079",
+          "d0039",
+          "g_rain",
+          "d0031"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      }
+    },
+    {
+      "id": "q031",
+      "query": "预算有限又要带小孩，最好坐地铁就能到",
+      "relevant": [
+        "d0121",
+        "d0077",
+        "d0106"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0106",
+          "d0150",
+          "d0113",
+          "d0131",
+          "d0192"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 0.3333,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0106",
+          "d0150",
+          "d0113",
+          "d0131",
+          "d0192"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 0.3333,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q032",
+      "query": "下午拍照，傍晚吃饭，晚上看灯光秀",
+      "relevant": [
+        "d0002",
+        "d0021",
+        "d0166"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0166",
+          "d0174",
+          "d0168",
+          "d0177",
+          "d0180"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 0.3333,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0166",
+          "d0168",
+          "d0174",
+          "d0177",
+          "d0180"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 0.3333,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q033",
+      "query": "白天爬山，晚上泡温泉，顺便带点茶叶回去",
+      "relevant": [
+        "d0046",
+        "d0174",
+        "d0152"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0174",
+          "d0038",
+          "d0168"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 0.3333,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0174",
+          "d0038",
+          "d0168"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 0.3333,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q034",
+      "query": "下雨又不想花钱，还要能坐一下午",
+      "relevant": [
+        "d0097",
+        "d0121"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0100",
+          "d0105",
+          "d0023",
+          "d0025",
+          "d0104"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0100",
+          "d0105",
+          "d0023",
+          "d0025",
+          "d0026"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      }
+    },
+    {
+      "id": "q035",
+      "query": "亲子加运动，最好都在室内，别太累",
+      "relevant": [
+        "d0081",
+        "d0095"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0072",
+          "d0088",
+          "g_rain",
+          "d0081",
+          "d0077"
+        ],
+        "found": 1,
+        "ranks": [
+          4
+        ],
+        "hit": true,
+        "recall": 0.5,
+        "reciprocal_rank": 0.25
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0072",
+          "g_rain",
+          "d0088",
+          "d0086",
+          "d0066"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      }
+    },
+    {
+      "id": "q036",
+      "query": "想拍胶片味道的照片，再买点文创带走",
+      "relevant": [
+        "d0005",
+        "d0154"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0031",
+          "d0041",
+          "d0035",
+          "d0034",
+          "d0033"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0031",
+          "d0041",
+          "d0034",
+          "d0035",
+          "d0033"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      }
+    },
+    {
+      "id": "q037",
+      "query": "夜骑之后想吃夜宵，还要赶末班车",
+      "relevant": [
+        "d0177",
+        "d0168",
+        "d0150"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0177",
+          "d0150",
+          "d0112",
+          "d0117",
+          "d0171"
+        ],
+        "found": 2,
+        "ranks": [
+          1,
+          2
+        ],
+        "hit": true,
+        "recall": 0.6667,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0177",
+          "d0150",
+          "d0112",
+          "d0171",
+          "d0117"
+        ],
+        "found": 2,
+        "ranks": [
+          1,
+          2
+        ],
+        "hit": true,
+        "recall": 0.6667,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q038",
+      "query": "杭州雨天适合拍照的室内地点怎么安排",
+      "relevant": [
+        "d0005",
+        "d0015",
+        "g_rain"
+      ],
+      "bm25": {
+        "retrieved": [
+          "g_rain",
+          "d0100",
+          "g_photo",
+          "d0143",
+          "d0007"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 0.3333,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "g_rain",
+          "d0100",
+          "g_photo",
+          "d0007",
+          "d0102"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 0.3333,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q039",
+      "query": "雨天室内优先选哪些地方，户外公园怎么处理",
+      "relevant": [
+        "g_rain"
+      ],
+      "bm25": {
+        "retrieved": [
+          "g_rain",
+          "g_photo",
+          "d0149",
+          "d0143",
+          "d0123"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "g_rain",
+          "d0149",
+          "d0123",
+          "g_photo",
+          "d0054"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q040",
+      "query": "人均预算和全组总费用怎么换算",
+      "relevant": [
+        "g_budget"
+      ],
+      "bm25": {
+        "retrieved": [
+          "g_budget",
+          "d0126",
+          "d0129",
+          "d0122",
+          "d0124"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "g_budget",
+          "d0126",
+          "d0129",
+          "d0122",
+          "d0130"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q041",
+      "query": "拍照活动的到达时间和营业时段怎么对齐",
+      "relevant": [
+        "g_photo"
+      ],
+      "bm25": {
+        "retrieved": [
+          "g_photo",
+          "d0175",
+          "d0142",
+          "d0013",
+          "d0080"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "g_photo",
+          "d0142",
+          "d0175",
+          "d0148",
+          "d0146"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q042",
+      "query": "午餐必须安排哪一类地点",
+      "relevant": [
+        "g_food"
+      ],
+      "bm25": {
+        "retrieved": [
+          "g_food",
+          "d0071",
+          "d0137",
+          "d0150",
+          "d0141"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "g_food",
+          "d0071",
+          "d0137",
+          "d0141",
+          "d0142"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    },
+    {
+      "id": "q043",
+      "query": "地点之间要留出什么时间，行程要不要填满",
+      "relevant": [
+        "g_route"
+      ],
+      "bm25": {
+        "retrieved": [
+          "d0112",
+          "d0108",
+          "d0109",
+          "d0120",
+          "d0149"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "d0112",
+          "d0109",
+          "d0108",
+          "d0149",
+          "d0110"
+        ],
+        "found": 0,
+        "ranks": [],
+        "hit": false,
+        "recall": 0.0,
+        "reciprocal_rank": 0.0
+      }
+    },
+    {
+      "id": "q044",
+      "query": "缺票价和营业时间时应该怎么回答",
+      "relevant": [
+        "g_unknown"
+      ],
+      "bm25": {
+        "retrieved": [
+          "g_unknown",
+          "g_photo",
+          "d0136",
+          "d0115",
+          "d0132"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      "tfidf": {
+        "retrieved": [
+          "g_unknown",
+          "g_photo",
+          "d0132",
+          "d0125",
+          "d0136"
+        ],
+        "found": 1,
+        "ranks": [
+          1
+        ],
+        "hit": true,
+        "recall": 1.0,
+        "reciprocal_rank": 1.0
+      }
+    }
+  ]
+}

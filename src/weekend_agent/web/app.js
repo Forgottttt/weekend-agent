@@ -57,6 +57,41 @@ function resetSession(message) {
 }
 $('reset').addEventListener('click', () => resetSession('已新建会话，下次生成开始新的记录。'));
 $('mode').addEventListener('change', () => resetSession('已切换运行方式并新建会话，当前表单条件已保留。'));
+
+// 把模型抽取到的槽位填进表单。模型只提出候选值，用户看得到、也改得动。
+function applySlots(provided) {
+  if (provided.travel_date) $('travel_date').value = provided.travel_date;
+  if (provided.budget_per_person !== undefined) $('budget').value = provided.budget_per_person;
+  if (provided.group_size !== undefined) $('group').value = provided.group_size;
+  if (provided.start_time) $('start').value = provided.start_time;
+  if (provided.end_time) $('end').value = provided.end_time;
+  if (provided.tags) $('tags').value = provided.tags.join('，');
+  if (provided.rain !== undefined) $('rain').checked = provided.rain === true;
+  if (provided.include_meal !== undefined) $('meal').checked = provided.include_meal === true;
+  if (provided.indoor !== undefined) $('indoor').value = provided.indoor ? 'inside' : 'outside';
+}
+
+$('extract').addEventListener('click', async () => {
+  const text = $('question').value.trim();
+  if (!text) { $('status').textContent = '请先在补充要求里写一句话，例如：两个人，预算200，11月21号，想拍照。'; return; }
+  if ($('mode').value !== 'live') {
+    $('status').textContent = '自然语言解析需要把运行方式切到「真实模型」；离线演示只按表单条件运行。';
+    return;
+  }
+  const button = $('extract'); button.disabled = true;
+  $('status').textContent = '正在解析这句话……';
+  try {
+    const response = await fetch('/api/extract', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text, mode: $('mode').value})});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || '解析失败');
+    applySlots(result.provided || {});
+    $('status').textContent = result.question
+      ? '已填入解析到的条件。' + result.question
+      : '已把解析到的条件填入表单。请核对后再生成安排；模型没提到的条件保持原样。';
+  } catch (error) { $('status').textContent = error.message; }
+  finally { button.disabled = false; }
+});
 async function checkModelConfig() {
   try {
     const response = await fetch('/api/health');

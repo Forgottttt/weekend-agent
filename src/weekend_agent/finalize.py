@@ -1,14 +1,13 @@
 """最终展示由应用重算。模型不能自行填写费用、营业时间或地点名称。"""
 
-import json
-
+from .jsonio import parse_json_object
 from .request import TripRequest
 from .tools import ToolRegistry, validate_arguments
 
 
 def verify_final(content: str, request: TripRequest, registry: ToolRegistry,
                  place_ids: set[str], guides: dict[str, dict]) -> dict:
-    candidate = json.loads(content)
+    candidate = parse_json_object(content, "最终方案")
     schema = {"type": "object", "properties": {
         "status": {"type": "string"},
         "stops": {"type": "array", "maxItems": 8, "items": {"type": "object", "properties": {

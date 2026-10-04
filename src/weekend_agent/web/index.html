@@ -11,10 +11,10 @@
 <label>兴趣（用逗号分开）<input id="tags" value="拍照，美食" placeholder="拍照、文化、自然、美食"></label>
 <div class="row"><label>室内外偏好<select id="indoor"><option value="any">都可以</option><option value="inside">室内</option><option value="outside">户外</option></select></label><label>运行方式<select id="mode"><option value="demo">离线演示</option><option value="live">真实模型（需配置）</option></select></label></div>
 <div class="checks"><label><input id="rain" type="checkbox">模拟雨天</label><label><input id="meal" type="checkbox" checked>安排用餐</label></div>
-<label>补充要求<textarea id="question" rows="2" maxlength="2000" placeholder="真实模型模式下，可补充自然语言要求"></textarea></label>
-<p class="hint">离线演示按表单生成，不理解补充要求。真实模型模式也使用同一套虚构地点资料。</p>
+<label>补充要求<textarea id="question" rows="2" maxlength="2000" placeholder="例：这周六下午想带爸妈出去走走，人均一百五以内，最好能坐下吃个饭"></textarea></label>
+<p class="hint">离线演示按表单生成，不理解这句话。真实模型模式下可点「解析这句话」，由模型抽取条件填入上面的表单，你确认后再生成。</p>
 <p id="model-status" class="hint">正在检查模型配置……</p>
-<div class="actions"><button id="generate" type="submit">生成我的安排</button><button type="button" id="reset" class="secondary">新建会话</button></div>
+<div class="actions"><button type="button" id="extract" class="secondary">解析这句话</button><button id="generate" type="submit">生成我的安排</button><button type="button" id="reset" class="secondary">新建会话</button></div>
 </form><p id="status" role="status" aria-live="polite">准备好就出发。</p></section>
 <section class="card result"><div class="result-heading"><h2>你的周末安排</h2><span id="plan-status" class="badge">等待生成</span></div>
 <div id="summary" class="summary">修改预算或切换雨天后再次生成，可以比较两份安排。</div>

@@ -36,6 +36,7 @@ def evaluate(mode: str = "demo", output_dir: Path | None = None) -> dict:
                              "pass": actual == case["expected_status"], "baseline_valid": baseline_valid,
                              "duration_seconds": result["duration_seconds"], "provider_calls": result["provider_calls"],
                              "tool_calls": result["tool_calls"], "model_calls": result["model_calls"],
+                             "final_checks": result.get("final_checks", 0),
                              "http_attempts": result["http_attempts"],
                              "input_tokens": result["input_tokens"], "output_tokens": result["output_tokens"],
                              "checked": result["last_check"]})
@@ -49,6 +50,9 @@ def evaluate(mode: str = "demo", output_dir: Path | None = None) -> dict:
               "passed": sum(row["pass"] for row in rows),
               "planned_count": len(planned), "validated_plan_count": sum(bool(row["checked"]["valid"]) for row in planned),
               "baseline_valid_count": sum(row["baseline_valid"] for row in rows),
+              # 终审被拒后重试的比例，用来衡量「模型输出不合法」这类格式问题的严重程度。
+              "repaired_count": sum(1 for row in rows if row.get("final_checks", 0) > 1),
+              "final_checks_total": sum(row.get("final_checks", 0) for row in rows),
               "model_calls": sum(row.get("model_calls", 0) for row in rows),
               "http_attempts": sum(row.get("http_attempts", 0) for row in rows),
               "input_tokens": sum(row.get("input_tokens", 0) for row in rows),

@@ -52,12 +52,26 @@ def create_server(port: int = 8765, service: PlanningService | None = None):
             mime = {"index.html": "text/html", "app.js": "text/javascript", "style.css": "text/css"}[filename]
             self.send(200, (web_root / filename).read_bytes(), mime + "; charset=utf-8")
 
+        def extract(self, body):
+            """把一句自然语言解析成表单条件。模型只提出候选值，前端填入后仍需用户确认。"""
+            from .config import ModelConfig
+            from .extraction import (clarification, extract_slots, missing_slots,
+                                     provided_slots)
+            from .providers import APIProvider
+            if body.get("mode", "live") != "live":
+                raise ValueError("自然语言解析需要真实模型模式")
+            slots = extract_slots(body.get("text", ""), APIProvider(ModelConfig.from_env()))
+            provided = provided_slots(slots)
+            absent = missing_slots(provided)
+            return {"slots": slots, "provided": provided, "missing": absent,
+                    "question": clarification(absent)}
+
         def do_POST(self):
             origin = self.headers.get("Origin")
             allowed = {f"http://127.0.0.1:{self.server.server_port}", f"http://localhost:{self.server.server_port}"}
             if not self.valid_host() or (origin and origin not in allowed):
                 return self.send(403, {"error": "只允许本地同源请求"})
-            if self.path != "/api/plan":
+            if self.path not in ("/api/plan", "/api/extract"):
                 return self.send(404, {"error": "接口不存在"})
             try:
                 length = int(self.headers.get("Content-Length", "0"))
@@ -68,7 +82,13 @@ def create_server(port: int = 8765, service: PlanningService | None = None):
                 def reject_constant(value):
                     raise ValueError("JSON 不接受 NaN 或 Infinity")
                 body = json.loads(self.rfile.read(length), parse_constant=reject_constant)
-                if not isinstance(body, dict) or set(body) - {"request", "question", "mode", "session_id"}:
+                if not isinstance(body, dict):
+                    raise ValueError("请求体必须是 JSON 对象")
+                if self.path == "/api/extract":
+                    if set(body) - {"text", "mode"}:
+                        raise ValueError("请求字段不正确")
+                    return self.send(200, self.extract(body))
+                if set(body) - {"request", "question", "mode", "session_id"}:
                     raise ValueError("请求字段不正确")
                 session_id = body.get("session_id")
                 if session_id is not None and (not isinstance(session_id, str) or len(session_id) != 32):

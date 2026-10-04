@@ -4,6 +4,17 @@
 
 Python 3.11以上，只用标准库，不需要安装第三方运行依赖。项目版本0.2.0。**全部地点、天气、费用、路线和资料均为虚构教学数据。真实模型适配器已准备，当前尚未完成真实API调用及效果评测。**
 
+## 从 GitHub 获取
+
+仓库：[Forgottttt/weekend-agent](https://github.com/Forgottttt/weekend-agent)，当前为私有仓库。换电脑时，使用有访问权限的GitHub账号获取代码：
+
+```bash
+git clone https://github.com/Forgottttt/weekend-agent.git
+cd weekend-agent
+```
+
+已有本地项目时，直接进入自己的项目目录即可，不必重新克隆。
+
 ## 打开网页
 
 ```bash

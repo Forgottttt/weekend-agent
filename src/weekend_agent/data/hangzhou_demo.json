@@ -1,0 +1,26 @@
+{
+  "city": "杭州",
+  "data_mode": "fictional_demo",
+  "description": "全部地点、价格、营业时段、坐标和天气均为虚构教学数据，不是杭州实际旅行资料。",
+  "weather": {"condition": "晴", "temperature_c": 23},
+  "places": [
+    {"id":"p01","name":"示例湖畔公园","category":"activity","tags":["拍照","自然"],"indoor":false,"price_per_person":0,"visit_minutes":90,"open":"08:00","close":"18:00","position":[0,0]},
+    {"id":"p02","name":"示例花园","category":"activity","tags":["拍照","自然"],"indoor":false,"price_per_person":20,"visit_minutes":60,"open":"09:00","close":"17:00","position":[1,0]},
+    {"id":"p03","name":"示例河边步道","category":"activity","tags":["拍照","散步"],"indoor":false,"price_per_person":0,"visit_minutes":60,"open":"07:00","close":"20:00","position":[1,1]},
+    {"id":"p04","name":"示例露天市集","category":"activity","tags":["美食","购物"],"indoor":false,"price_per_person":15,"visit_minutes":60,"open":"11:00","close":"19:00","position":[2,1]},
+    {"id":"p05","name":"示例观景台","category":"activity","tags":["拍照","自然"],"indoor":false,"price_per_person":30,"visit_minutes":60,"open":"09:00","close":"17:00","position":[3,2]},
+    {"id":"p06","name":"示例骑行公园","category":"activity","tags":["运动","自然"],"indoor":false,"price_per_person":35,"visit_minutes":90,"open":"08:00","close":"18:00","position":[3,1]},
+    {"id":"p07","name":"示例历史街区","category":"activity","tags":["拍照","文化"],"indoor":false,"price_per_person":0,"visit_minutes":60,"open":"09:00","close":"20:00","position":[0,1]},
+    {"id":"p08","name":"示例夜景广场","category":"activity","tags":["拍照","散步"],"indoor":false,"price_per_person":0,"visit_minutes":60,"open":"17:00","close":"22:00","position":[2,0]},
+    {"id":"p09","name":"示例城市展览馆","category":"activity","tags":["拍照","文化"],"indoor":true,"price_per_person":20,"visit_minutes":90,"open":"09:00","close":"17:00","position":[0,0]},
+    {"id":"p10","name":"示例摄影展","category":"activity","tags":["拍照","艺术"],"indoor":true,"price_per_person":40,"visit_minutes":60,"open":"10:00","close":"18:00","position":[1,1]},
+    {"id":"p11","name":"示例书店","category":"activity","tags":["文化","阅读"],"indoor":true,"price_per_person":0,"visit_minutes":60,"open":"10:00","close":"21:00","position":[1,0]},
+    {"id":"p12","name":"示例桌游馆","category":"activity","tags":["游戏","社交"],"indoor":true,"price_per_person":60,"visit_minutes":120,"open":"12:00","close":"22:00","position":[2,0]},
+    {"id":"p13","name":"示例手作工坊","category":"activity","tags":["艺术","手作"],"indoor":true,"price_per_person":80,"visit_minutes":90,"open":"10:00","close":"19:00","position":[2,2]},
+    {"id":"p14","name":"示例室内乐园","category":"activity","tags":["游戏","亲子"],"indoor":true,"price_per_person":100,"visit_minutes":120,"open":"10:00","close":"20:00","position":[3,0]},
+    {"id":"f01","name":"示例面馆","category":"food","tags":["美食"],"indoor":true,"price_per_person":35,"visit_minutes":60,"open":"11:00","close":"20:00","position":[1,0]},
+    {"id":"f02","name":"示例家常菜馆","category":"food","tags":["美食"],"indoor":true,"price_per_person":60,"visit_minutes":60,"open":"11:00","close":"21:00","position":[2,1]},
+    {"id":"f03","name":"示例咖啡馆","category":"food","tags":["美食","拍照"],"indoor":true,"price_per_person":45,"visit_minutes":60,"open":"09:00","close":"20:00","position":[1,1]},
+    {"id":"f04","name":"示例小吃店","category":"food","tags":["美食"],"indoor":true,"price_per_person":25,"visit_minutes":45,"open":"10:00","close":"19:00","position":[0,1]}
+  ]
+}

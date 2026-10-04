@@ -1,0 +1,14 @@
+[
+  {"id":"sunny","request":{},"expected_status":"planned"},
+  {"id":"rainy","request":{"rain":true},"expected_status":"planned"},
+  {"id":"budget80","request":{"budget_per_person":80},"expected_status":"planned"},
+  {"id":"meal_under25","request":{"budget_per_person":20},"expected_status":"no_plan"},
+  {"id":"without_meal","request":{"include_meal":false,"budget_per_person":20},"expected_status":"planned"},
+  {"id":"five_people","request":{"group_size":5},"expected_status":"planned"},
+  {"id":"afternoon","request":{"start_time":"12:00","end_time":"17:00"},"expected_status":"planned"},
+  {"id":"one_hour_food","request":{"start_time":"12:00","end_time":"13:00","tags":["美食"],"indoor":true},"expected_status":"planned"},
+  {"id":"culture","request":{"tags":["文化"],"include_meal":false},"expected_status":"planned"},
+  {"id":"art","request":{"tags":["艺术"],"include_meal":false,"indoor":true},"expected_status":"planned"},
+  {"id":"outdoor","request":{"indoor":false,"include_meal":false},"expected_status":"planned"},
+  {"id":"zero_budget","request":{"budget_per_person":0,"include_meal":false},"expected_status":"planned"}
+]

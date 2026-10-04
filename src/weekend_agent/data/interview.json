@@ -1,0 +1,542 @@
+[
+  {
+    "id": "Q01",
+    "lesson": 1,
+    "topic": "python",
+    "question": "地点列表与按 ID 索引的字典分别适合什么操作？",
+    "answer": "列表保留顺序，适合逐个遍历；字典按地点 ID 直接取值。TripTools 同时保留原始 data 和 places 索引，search_places 遍历 values，路线工具用 ID 查地点。",
+    "evidence": "tools.py: TripTools.__init__, search_places, _place",
+    "followup": "字典查询平均复杂度与最坏情况是否相同？",
+    "followup_hint": "平均查询常按O(1)分析，碰撞等最坏情况可退化，不能把平均复杂度当无条件保证。"
+  },
+  {
+    "id": "Q02",
+    "lesson": 1,
+    "topic": "python",
+    "question": "JSON 文本进入项目后，变量的类型怎样变化？",
+    "answer": "read_text 返回字符串，json.loads 将它解析成字典和列表；JSON true/null 分别变成 Python True/None。文本解析成功不代表满足业务规则。",
+    "evidence": "examples/lesson01/01_data_basics.py",
+    "followup": "JSON 格式错误和缺少必填字段分别在哪一层发现？",
+    "followup_hint": "JSON语法错误在loads阶段；字段缺失在validate_arguments；不支持城市在业务函数。"
+  },
+  {
+    "id": "Q03",
+    "lesson": 1,
+    "topic": "python",
+    "question": "continue、return 和 raise 分别改变哪段执行过程？",
+    "answer": "continue 跳过当前循环剩余语句；return 结束当前函数并返回值；raise 产生异常并寻找匹配的异常处理。地点筛选使用 continue，返回结果使用 return，错误城市使用 raise。",
+    "evidence": "tools.py: search_places, _check_city",
+    "followup": "摄影展 40 元、价格上限 30 元时，found 怎样变化？",
+    "followup_hint": "40>30触发continue，摄影展不会加入found；之前已加入的地点仍保留。"
+  },
+  {
+    "id": "Q04",
+    "lesson": 1,
+    "topic": "python",
+    "question": "字典 copy 为什么不等于完全独立的一份数据？",
+    "answer": "copy 是浅拷贝，外层键值可以独立修改，但嵌套列表仍可能共享。第二课只改外层 max_price；如果修改复制字典里的 tags 列表，就需要理解共享引用或使用深拷贝。",
+    "evidence": "examples/lesson02/03_registry_errors.py",
+    "followup": "用一个 append 实验说明浅拷贝的共享关系。",
+    "followup_hint": "复制字典后向复制体tags追加，会影响共享列表；deepcopy或单独复制列表可隔离。"
+  },
+  {
+    "id": "Q05",
+    "lesson": 2,
+    "topic": "tools",
+    "question": "Function Calling 时到底是谁执行 Python 函数？",
+    "answer": "模型返回工具名字和结构化参数，应用解析、校验并调用本地函数，再把结果传回模型。模型不会因为生成了函数名就在本机运行 Python。",
+    "evidence": "agent.py: TripAgent.run; tools.py: ToolRegistry.execute",
+    "followup": "指出请求、执行、结果回传对应的三段代码。",
+    "followup_hint": "工具说明传给provider，tool_calls是请求，registry.execute执行，role=tool回传。"
+  },
+  {
+    "id": "Q06",
+    "lesson": 2,
+    "topic": "tools",
+    "question": "工具 Schema 的 required 与允许 null 有什么区别？",
+    "answer": "required 决定字段必须出现；type 决定值能否为 null。indoor 必须提供但允许 null，解析后是 None，代表不限室内外。",
+    "evidence": "tools.py: TOOL_SCHEMAS; docs/LESSON_02.md",
+    "followup": "为什么删除 indoor 会失败，而 indoor=null 可以？",
+    "followup_hint": "required检查键存在；type允许None。缺键与有键但值为空是不同状态。"
+  },
+  {
+    "id": "Q07",
+    "lesson": 2,
+    "topic": "tools",
+    "question": "类型注解为什么不能代替参数校验？",
+    "answer": "普通 Python 调用不会根据类型注解自动拒绝字符串价格。项目用 validate_arguments 检查必填字段、未知字段、类型、范围和有限数字，业务函数再检查城市等领域条件。",
+    "evidence": "tools.py: validate_arguments, _check_city",
+    "followup": "价格字符串和上海城市分别在哪一层失败？",
+    "followup_hint": "价格字符串在Schema检查失败；上海通过string检查后，在_check_city失败。"
+  },
+  {
+    "id": "Q08",
+    "lesson": 2,
+    "topic": "tools",
+    "question": "字符串工具名怎样变成一次函数调用？",
+    "answer": "注册表先确认名字已登记，然后 getattr 取得对象上的方法，最后用 **arguments 展开字典调用方法。取方法与执行方法是两步。",
+    "evidence": "tools.py: ToolRegistry.execute",
+    "followup": "为什么不能未经名字检查就任意 getattr 调用？",
+    "followup_hint": "未经登记检查会暴露非预期方法；当前仅允许名字出现在by_name的工具。"
+  },
+  {
+    "id": "Q09",
+    "lesson": 3,
+    "topic": "project",
+    "question": "每人预算、全组费用和预算范围怎样定义？",
+    "answer": "每人费用等于地点费用加相邻交通费用，全组费用乘人数。当前不含往返起点、购物和额外消费，必须在展示里说明范围。",
+    "evidence": "tools.py: check_itinerary; finalize.py: render_plan",
+    "followup": "三个人逛免费公园、吃35元面馆、交通2元，总计多少？",
+    "followup_hint": "每人0+35+2=37，三人111元；预算也是每人比较，不是全组直接比较。"
+  },
+  {
+    "id": "Q10",
+    "lesson": 3,
+    "topic": "python",
+    "question": "为什么把 HH:MM 转成分钟数再比较？",
+    "answer": "统一成整数可以做游玩时长加法和交通衔接判断，例如10:00是600，90分钟后是690。to_minutes 还检查格式与有效范围。",
+    "evidence": "tools.py: to_minutes, format_time",
+    "followup": "上站11:30结束，交通15分钟，下站11:30开始会怎样？",
+    "followup_hint": "最早11:45到，下站11:30开始不足15分钟，会加入交通不足问题。"
+  },
+  {
+    "id": "Q11",
+    "lesson": 3,
+    "topic": "project",
+    "question": "为什么预算和营业时间由代码校验，而不是只让模型判断？",
+    "answer": "这些是可重复计算的硬约束，代码便于测试且不依赖模型措辞。模型提出候选方案，工具给出具体冲突，再由应用最终校验。",
+    "evidence": "tools.py: check_itinerary; finalize.py: verify_final",
+    "followup": "展览馆16:00进入、游玩90分钟、17:00关门，哪里冲突？",
+    "followup_hint": "16:00+90分钟=17:30，比17:00关门晚30分钟。"
+  },
+  {
+    "id": "Q12",
+    "lesson": 3,
+    "topic": "project",
+    "question": "没有找到行程是否意味着这个请求无解？",
+    "answer": "不意味着。离线规划采用贪心启发式，没有穷举或最优性证明。no_plan 只表示本轮没有候选方案，不能宣称所有可能方案都不存在。",
+    "evidence": "planning.py: build_demo_stops; finalize.py: render_plan",
+    "followup": "构造一个贪心先选活动后错过用餐的反例。",
+    "followup_hint": "10:00–11:00且要求用餐：规则先选60分钟免费活动可能失败，但60分钟咖啡馆可单独满足；没有最优性保证。"
+  },
+  {
+    "id": "Q13",
+    "lesson": 4,
+    "topic": "tools",
+    "question": "assistant 的 tool_calls 与 tool 消息如何配对？",
+    "answer": "每个工具请求有 id，执行结果的 tool_call_id 必须指向该 id。调用请求保留在 assistant 消息里，结果用 role=tool 追加，下一次模型调用才能理解结果来自哪个工具。",
+    "evidence": "agent.py: TripAgent.run; tests/test_agent.py",
+    "followup": "同一轮有三个工具请求，需要几条结果消息？",
+    "followup_hint": "三个请求分别需要三条tool结果，各自带对应调用ID。"
+  },
+  {
+    "id": "Q14",
+    "lesson": 4,
+    "topic": "tools",
+    "question": "为什么工具结果常常还要 json.dumps？",
+    "answer": "工具执行后得到 Python 字典，当前协议的 tool.content 使用 JSON 文本，因此要序列化。下一步模型读取的是结果消息，API 请求本身也要编码成 JSON 字节。",
+    "evidence": "agent.py; providers.py: APIProvider.complete",
+    "followup": "loads 和 dumps 的输入输出分别是什么？",
+    "followup_hint": "loads把JSON字符串变Python对象；dumps把Python对象变JSON字符串，HTTP再编码成字节。"
+  },
+  {
+    "id": "Q15",
+    "lesson": 4,
+    "topic": "tools",
+    "question": "工具参数不是有效 JSON 时怎样处理？",
+    "answer": "Agent 在解析阶段捕获 JSONDecodeError，返回 ok=false 的具体错误，并保持调用 ID 配对。后续模型可以修正；未知字段或错误类型则由注册表处理。",
+    "evidence": "agent.py; tests/test_agent.py: test_bad_tool_json_is_returned_for_correction",
+    "followup": "缺少 tool_call_id 能按同样方式处理吗，为什么？",
+    "followup_hint": "缺少ID无法正确配对，不应发一条猜测ID的tool结果；当前明确终止协议异常。"
+  },
+  {
+    "id": "Q16",
+    "lesson": 4,
+    "topic": "tools",
+    "question": "同一轮多个 tool_calls 是否等于并行执行？",
+    "answer": "不是。本项目依次执行每个调用，批量请求只减少部分模型往返。只有互不依赖的工具才可能并行，还要考虑错误、结果顺序和共享状态。",
+    "evidence": "agent.py: for call in calls",
+    "followup": "查两个城市天气与先搜索地点再查路线，哪组适合并行？",
+    "followup_hint": "互不依赖的天气查询可并行；路线需要先得到搜索地点ID，存在数据依赖。"
+  },
+  {
+    "id": "Q17",
+    "lesson": 5,
+    "topic": "project",
+    "question": "你的项目中 Workflow 和 Agent 的区别体现在哪里？",
+    "answer": "离线 DayDemoProvider 是确定的规则流程。live 模式下模型根据消息与工具结果决定下一步调用或结束，应用仍用固定约束和终止条件控制它。不能把离线流程效果说成模型规划效果。",
+    "evidence": "planning.py; providers.py; agent.py",
+    "followup": "这个业务哪些环节完全可以不用模型？",
+    "followup_hint": "预算、营业时段、表单解析、固定模板路线都能用确定代码；模型价值需在复杂表达和动态选择中验证。"
+  },
+  {
+    "id": "Q18",
+    "lesson": 5,
+    "topic": "tools",
+    "question": "怎么防止工具调用死循环？",
+    "answer": "限制模型轮数和工具请求数，最终校验还限制失败修正次数。每次错误是可读数据，但重试不能无限；达到上限就明确停止并返回失败原因。",
+    "evidence": "agent.py: max_rounds, max_tool_calls, final_checks",
+    "followup": "HTTP 重试次数与 Agent 轮数是不是同一个计数？",
+    "followup_hint": "一次complete可包含最多两次HTTP尝试；Agent轮数限制不等于网络尝试限制。"
+  },
+  {
+    "id": "Q19",
+    "lesson": 5,
+    "topic": "project",
+    "question": "为什么单 Agent，不拆成多个 Agent？",
+    "answer": "当前任务小、地点库小，工具分工已经清晰。多 Agent 会增加消息、状态同步、延迟和评测复杂度；只有出现独立且复杂的子任务并能验证收益，才考虑拆分。",
+    "evidence": "agent.py; docs/ARCHITECTURE.md",
+    "followup": "如果扩成跨城市多天旅游，你会先拆什么？",
+    "followup_hint": "先识别独立任务和接口，例如资料查询与候选方案比较；拆分前测成本、状态协调和结果质量。"
+  },
+  {
+    "id": "Q20",
+    "lesson": 5,
+    "topic": "project",
+    "question": "为什么没有直接用 LangGraph？以后如何迁移？",
+    "answer": "当前用标准库循环让协议与状态容易学习，规模尚小。可把 messages/request/evidence 放入 State，把模型、工具执行、最终校验做成节点，把调用或结束作为条件边。当前没有实现 LangGraph，不能说已使用。",
+    "evidence": "agent.py; docs/ARCHITECTURE.md",
+    "followup": "检查点和数据库保存结果分别解决什么问题？",
+    "followup_hint": "检查点可保存节点执行状态；当前SQLite只保存已完成回合，不恢复中途工具位置。"
+  },
+  {
+    "id": "Q21",
+    "lesson": 6,
+    "topic": "rag",
+    "question": "项目的 RAG 数据从哪里来，检索怎样接入？",
+    "answer": "六份自编虚构教学资料已经是独立小块，GuideIndex 建立 BM25 索引，search_guides 返回文本和来源 ID。live 模型可以据此生成受约束结果；demo 只验证检索和引用通路，不证明生成质量。",
+    "evidence": "retrieval.py; data/guides.json; tools.py: search_guides",
+    "followup": "这是否属于向量数据库 RAG？",
+    "followup_hint": "不是。当前只有BM25词法索引，没有embedding或向量数据库。"
+  },
+  {
+    "id": "Q22",
+    "lesson": 6,
+    "topic": "rag",
+    "question": "BM25 与 embedding 检索有什么区别？",
+    "answer": "BM25 依赖词项重合、词频和文档长度；embedding 将文本映射到向量，可能召回用不同措辞表达的相关内容。当前中文字符二元组实现很小，但同义词和语义理解能力有限，选择要由检索集评测。",
+    "evidence": "retrieval.py: tokenize, GuideIndex.search",
+    "followup": "设计一条同义改写查询来暴露当前检索的弱点。",
+    "followup_hint": "例如避雨看展，语义相关但二元组可能不重合；先实际运行并标注期望资料，再讨论向量检索。"
+  },
+  {
+    "id": "Q23",
+    "lesson": 6,
+    "topic": "rag",
+    "question": "文档怎么切块，chunk size 怎样选择？",
+    "answer": "当前六份资料很短，每份直接作为一块，没有 PDF 清洗或自动切块。扩展时先保留标题和语义边界，再按 token 预算切块，测试 overlap、召回和上下文成本，不能套一个万能长度。",
+    "evidence": "data/guides.json; docs/LESSON_06.md",
+    "followup": "跨块答案、表格和标题丢失分别会造成什么问题？",
+    "followup_hint": "跨块可能失去完整答案，表格结构会破坏关系，标题丢失会让内容缺少主题；需保留结构和metadata。"
+  },
+  {
+    "id": "Q24",
+    "lesson": 6,
+    "topic": "rag",
+    "question": "为什么检索为空就应返回空，而不是补一段资料？",
+    "answer": "检索器只返回有词项重合的资料，没有匹配就不伪造证据。来源 ID 检查只保证引用来自已检索资料，不保证文本支持结论，语义忠实性仍需额外评测。",
+    "evidence": "retrieval.py; finalize.py: verify_final",
+    "followup": "Recall@k、rerank 和引用忠实性分别评什么？",
+    "followup_hint": "Recall@k是相关资料召回比例；rerank调整候选排序；忠实性检查生成结论是否被引用支持。"
+  },
+  {
+    "id": "Q25",
+    "lesson": 7,
+    "topic": "project",
+    "question": "模型把预算改大后通过了工具检查，怎样防止展示超预算结果？",
+    "answer": "工具参数可能被模型改动，所以应用最终检查使用 TripRequest 保存的权威预算、人数和时间。verify_final 重新构造检查参数，不能仅信任模型最后一次 check_itinerary 的结果。",
+    "evidence": "request.py: check_arguments; finalize.py; tests/test_complete_project.py",
+    "followup": "找到预算30、模型校验999、最后修正成25元的测试。",
+    "followup_hint": "看test_final_rejection_can_be_repaired_and_display_is_recomputed：工具预算999，权威30，35元被拒后25元通过。"
+  },
+  {
+    "id": "Q26",
+    "lesson": 7,
+    "topic": "project",
+    "question": "如何防止最终回答凭空写低票价或虚构地点？",
+    "answer": "最终结构只接受地点 ID、开始时间与已检索来源 ID，不接受模型填写费用和名称。应用确认地点来自本轮搜索，再重算并渲染。真实数据是否准确是另一层问题，目前全为教学数据。",
+    "evidence": "finalize.py: verify_final, render_plan",
+    "followup": "Schema 拒绝了模型新增的 cost_per_person 字段吗？",
+    "followup_hint": "是，最终Schema additionalProperties=false；价格只从地点表和工具计算中得到。"
+  },
+  {
+    "id": "Q27",
+    "lesson": 7,
+    "topic": "tools",
+    "question": "检索资料夹带指令时怎样降低提示注入风险？",
+    "answer": "提示词声明资料是数据，应用只开放登记工具并检查最终结构和权威约束。当前工具只做本地读取和计算。这些措施没有证明完全免疫提示注入，仍应加入恶意资料测试和权限隔离。",
+    "evidence": "prompts.py; tools.py: ToolRegistry; finalize.py",
+    "followup": "如果将来加入下单或写库工具，哪里需要人工确认？",
+    "followup_hint": "有实际副作用的工具应在执行前设置可审阅的确认点、权限范围和幂等机制，不能靠最后再检查撤销。"
+  },
+  {
+    "id": "Q28",
+    "lesson": 7,
+    "topic": "project",
+    "question": "最终校验失败后程序怎样继续，什么时候停止？",
+    "answer": "错误加入消息，让模型有机会修正最终 JSON；最多检查三次，同时受整体轮数限制。通过后只展示应用渲染的结果，失败则明确停止，不能把失败包装成成功。",
+    "evidence": "agent.py: final_rejected, final_checks",
+    "followup": "为什么修正反馈不会成为一条未配对 tool 消息？",
+    "followup_hint": "上条assistant是最终content，没有挂起tool_calls；反馈用user消息，不需要虚构tool_call_id。"
+  },
+  {
+    "id": "Q29",
+    "lesson": 8,
+    "topic": "memory",
+    "question": "长期存储和模型上下文是一回事吗？",
+    "answer": "不是。SQLite 保存完整可恢复记录，select_context 只把最近完整回合交给模型。数据库里有历史，不代表模型此刻看到了历史；跨会话语义长期记忆尚未实现。",
+    "evidence": "memory.py; service.py",
+    "followup": "用户问被截掉的旧内容，当前版本会怎样？",
+    "followup_hint": "历史仍在数据库，但当前没有自动历史检索；模型不能假装已经看过，可说明限制或重新提供信息。"
+  },
+  {
+    "id": "Q30",
+    "lesson": 8,
+    "topic": "memory",
+    "question": "为什么不能把所有消息直接截到最后十条？",
+    "answer": "任意按条数截断可能切开 assistant 工具请求和 tool 结果。当前按结构化用户回合边界保留完整片段，并保留 system 消息；如果一个完整回合过长，就报错而不是强行切碎。",
+    "evidence": "memory.py: select_context",
+    "followup": "字符上限能精确替代模型 token 上限吗？",
+    "followup_hint": "不能。字符数只是保护上限；真实token要依所用模型tokenizer或服务usage核验。"
+  },
+  {
+    "id": "Q31",
+    "lesson": 8,
+    "topic": "memory",
+    "question": "修改预算时怎样避免丢掉人数和日期？",
+    "answer": "每个会话保存上一份结构化 request，新请求仅覆盖提供字段，然后重新校验。自然语言补充不能隐式放宽表单约束，网页修改表单或CLI显式命令才改变权威字段。",
+    "evidence": "service.py: PlanningService.plan; cli.py",
+    "followup": "若以后支持自由文本修改预算，需要增加哪一步确认与状态更新？",
+    "followup_hint": "增加结构化意图抽取和字段更新，处理模糊含义；更新权威request后再校验，不能让模型偷偷改工具预算。"
+  },
+  {
+    "id": "Q32",
+    "lesson": 8,
+    "topic": "system",
+    "question": "同一会话同时提交两个请求会发生什么？",
+    "answer": "进程内会话锁拒绝同会话同时生成，SQLite version 更新还防止旧状态覆盖新状态。当前全局最多两个规划任务；这是单进程本地演示，不是分布式锁或生产限流。",
+    "evidence": "service.py; memory.py: SessionStore.save",
+    "followup": "多个服务进程时，进程内 Lock 为什么不够？",
+    "followup_hint": "每个进程有自己的Lock；需要共享协调或队列。数据库version可防覆盖，但不阻止重复消耗模型调用。"
+  },
+  {
+    "id": "Q33",
+    "lesson": 9,
+    "topic": "system",
+    "question": "网页点击按钮之后，数据走过哪些层？",
+    "answer": "浏览器 fetch 发送JSON，HTTP处理器检查请求，PlanningService恢复状态并运行Agent，最终校验后保存SQLite并返回JSON，前端用返回数据展示。前端不直接调用模型服务。",
+    "evidence": "web/app.js; server.py; service.py",
+    "followup": "哪一层适合放业务约束，为什么？",
+    "followup_hint": "业务约束放在服务和验证器，前端只改善交互，HTTP层检查传输结构；各层都有不同责任。"
+  },
+  {
+    "id": "Q34",
+    "lesson": 9,
+    "topic": "system",
+    "question": "模型密钥怎样配置，为什么不能放前端？",
+    "answer": "从服务进程环境变量读取，通过Authorization发送给模型服务，不写入网页、调用日志和数据库。前端可被查看，因此不能存密钥。本地服务无账号鉴权，只绑定loopback，不能原样公开部署。",
+    "evidence": "config.py; providers.py; server.py",
+    "followup": "上线前还需要哪些鉴权、配额和日志处理？",
+    "followup_hint": "需要身份鉴权、用户数据隔离、调用配额、费用控制、密钥管理和监控；当前只在本机演示。"
+  },
+  {
+    "id": "Q35",
+    "lesson": 9,
+    "topic": "system",
+    "question": "请求失败时怎样区分用户输入错误与模型服务错误？",
+    "answer": "HTTP层对非法表单返回400，对并发冲突返回409，对已处理的模型或规划失败返回502。前端显示具体可读错误；内部未处理错误返回通用500，避免把敏感响应原文暴露出去。",
+    "evidence": "server.py: do_POST; web/app.js",
+    "followup": "429应该怎样重试，401为什么通常不该重试？",
+    "followup_hint": "429可有上限退避并考虑Retry-After；401通常需要修复凭据，重复请求不会自行变好。"
+  },
+  {
+    "id": "Q36",
+    "lesson": 9,
+    "topic": "system",
+    "question": "线程、协程和工具并行分别解决什么问题？",
+    "answer": "HTTP服务线程让本地请求可同时被接收，限流控制实际规划数。当前工具仍同步执行；协程适合组织大量I/O等待但不自动加速CPU计算。需要明确数据依赖后再选择并发机制。",
+    "evidence": "server.py; service.py; agent.py",
+    "followup": "查天气和生成依赖天气的计划能直接同时执行吗？",
+    "followup_hint": "计划依赖天气结果，不能把整个依赖链当独立任务；先并发真正独立的查询。"
+  },
+  {
+    "id": "Q37",
+    "lesson": 10,
+    "topic": "evaluation",
+    "question": "你的评测集怎样构造，覆盖了什么？",
+    "answer": "12个固定开发期回归场景覆盖雨天、预算、人数、时间、兴趣、室内外和用餐要求，另有单元测试覆盖协议和恶意最终参数。当前没有独立盲测集、真实用户样本或多次真实模型实验。",
+    "evidence": "data/eval_cases.json; tests/test_complete_project.py",
+    "followup": "下一步怎样加入改写、冲突约束和检索难例？",
+    "followup_hint": "按业务场景和错误类型分层，人工确认预期，保留未参与开发调参的测试集，并记录版本。"
+  },
+  {
+    "id": "Q38",
+    "lesson": 10,
+    "topic": "evaluation",
+    "question": "全部最终输出都通过校验，是不是成功率100%？",
+    "answer": "不是。校验是过滤门，拒绝输出也可能使有效率很高但任务完成很低。应一起报告返回方案率、满足约束比例、预期场景结果、错误率、调用量和延迟，并注明分母。",
+    "evidence": "evaluation.py: evaluate",
+    "followup": "如果模型每次只返回no_plan，你的12个场景还能全过吗？",
+    "followup_hint": "只返回no_plan仅匹配1个场景；11个planned场景失败。返回计划比例也为0。"
+  },
+  {
+    "id": "Q39",
+    "lesson": 10,
+    "topic": "evaluation",
+    "question": "demo的12/12能怎样写在简历里？",
+    "answer": "可以说明建立12例离线回归集并验证规则流程，不能称为真实大模型任务成功率。现有基线是硬编码行程，较弱；不能据此宣称超过主流Agent或生产系统。",
+    "evidence": "evaluation.py; outputs/eval_*.json; docs/RESUME.md",
+    "followup": "做模型对比时怎样控制数据、提示词和采样设置？",
+    "followup_hint": "同一测试集、约束、提示词版本、模型版本与采样设置，重复运行并记录失败，不挑最好一次。"
+  },
+  {
+    "id": "Q40",
+    "lesson": 10,
+    "topic": "evaluation",
+    "question": "如何观测延迟和成本，重试是否也算费用？",
+    "answer": "记录模型逻辑调用、工具请求、最终检查、耗时和API返回的token usage。HTTP重试可能增加实际请求和费用，当前usage不能覆盖丢失的响应；具体价格需按服务商账单核验，demo模型调用是0。",
+    "evidence": "providers.py; agent.py: RunResult; evaluation.py",
+    "followup": "为什么不能把离线毫秒级耗时当成真实模型响应延迟？",
+    "followup_hint": "离线没有网络和模型生成；真实模型延迟由网络、排队、生成及工具轮数共同决定。"
+  },
+  {
+    "id": "Q41",
+    "lesson": 11,
+    "topic": "model",
+    "question": "真实模型接入需要改动Agent循环吗？",
+    "answer": "APIProvider与DayDemoProvider实现同一个complete接口，循环按相同assistant/tool结构工作，所以切换主要在service创建provider。真实服务的响应差异、工具支持和费用仍要实测，模拟协议测试不等于联网验证。",
+    "evidence": "providers.py: ChatProvider; service.py",
+    "followup": "如果供应商要求额外thinking字段，应该改哪一层？",
+    "followup_hint": "供应商专属字段放在APIProvider，循环只依赖统一消息结构；用模拟响应和真实单例分别验证。"
+  },
+  {
+    "id": "Q42",
+    "lesson": 11,
+    "topic": "model",
+    "question": "模型选择怎样比较能力、稳定性和成本？",
+    "answer": "先固定代表性用例和工具协议要求，比较任务结果、格式错误、工具参数错误、延迟、token与重试。当前没有真实模型对比结论，配置默认名称不表示已证明这个模型最好。",
+    "evidence": "config.py; evaluation.py; docs/LESSON_11.md",
+    "followup": "怎样避免只挑模型擅长的题目做对比？",
+    "followup_hint": "先固定覆盖集再比较，保留失败与独立测试样本，不根据某个模型结果删题。"
+  },
+  {
+    "id": "Q43",
+    "lesson": 11,
+    "topic": "model",
+    "question": "RAG和微调各解决什么问题，你实际做过什么？",
+    "answer": "RAG在请求时提供外部资料，微调改变模型参数以学习任务或行为。本项目未做模型微调。百度飞桨经历已确认是YOLO视觉模型微调和陶瓷、管道缺陷检测，不能把它说成大语言模型微调。",
+    "evidence": "retrieval.py; 用户确认的实习经历；docs/INTERVIEW_TRAINING.md",
+    "followup": "请补充视觉项目中的数据、损失、评价指标和你的具体贡献，未知项不要编。",
+    "followup_hint": "说明自己实际负责的部分；指标和数据量从真实资料确认，不记得就不要编。"
+  },
+  {
+    "id": "Q44",
+    "lesson": 11,
+    "topic": "model",
+    "question": "LoRA的基本思想是什么，它和项目有什么关系？",
+    "answer": "冻结主体权重，用低秩矩阵更新减少可训练参数，例如ΔW=BA。rank影响容量与参数量，效果要实测；本项目没有实现LoRA，这属于补充基础知识，不能包装成已有成果。",
+    "evidence": "补充阅读：LoRA原始论文；docs/RESEARCH.md",
+    "followup": "低秩更新的参数量怎样随输入维度、输出维度和rank变化？",
+    "followup_hint": "两个矩阵通常需r×输入维度加输出维度×r个参数，即r(din+dout)，与完整矩阵din×dout比较。"
+  },
+  {
+    "id": "Q45",
+    "lesson": 12,
+    "topic": "project",
+    "question": "请用90秒介绍这个项目。",
+    "answer": "按问题、约束、架构、验证、边界五步讲：城市行程规划，模型选择工具，程序检查预算时间，BM25资料检索，SQLite保存会话，网页展示受校验结果。再明确虚构数据、离线基线和真实模型验证状态，讲一个失败修复案例。",
+    "evidence": "docs/ARCHITECTURE.md; docs/RESUME.md",
+    "followup": "面试官问最难的部分，你能打开对应测试解释吗？",
+    "followup_hint": "选择能说明权威预算、工具参数和最终校验关系的案例，打开测试而不是只讲抽象难点。"
+  },
+  {
+    "id": "Q46",
+    "lesson": 12,
+    "topic": "project",
+    "question": "这个项目的代码有多少是AI生成的，你自己的贡献是什么？",
+    "answer": "诚实说明初始实现和课程由AI协助生成；你负责理解、运行、修改、设计反例和验证行为。只有实际完成的改动和可解释的代码才能作为个人贡献，不应声称从零独立手写全部实现。",
+    "evidence": "本聊天；docs/INTERVIEW_TRAINING.md",
+    "followup": "现场把每人预算改成全组预算，并说明需要修改的层。",
+    "followup_hint": "列出实际亲自改过的文件、反例、测试和结果；尚未做的改动不能声称个人贡献。"
+  },
+  {
+    "id": "Q47",
+    "lesson": 12,
+    "topic": "project",
+    "question": "从视觉算法实习转向Agent，怎样解释自己的优势和不足？",
+    "answer": "用真实的模型训练与视觉缺陷检测经历说明数据、实验和验证意识，再用本项目证明工具协议和应用工程学习。承认还需要补充Python、检索和服务工程，不把YOLO经验等同于LLM训练经验。",
+    "evidence": "用户确认的百度飞桨实习；docs/RESUME.md",
+    "followup": "选一个真实视觉训练问题，说明怎样定位并验证改进。",
+    "followup_hint": "例如类别不平衡或误检问题，需要真实样本、基线、修改与验证；这里不给用户虚构实习故事。"
+  },
+  {
+    "id": "Q48",
+    "lesson": 12,
+    "topic": "project",
+    "question": "如果再给你两周，会优先改进什么？",
+    "answer": "先完成真实模型调用记录和失败集，再做独立测试集及检索改写评测；真实地图数据是另一个有凭据依赖的阶段。根据测量结果决定是否加向量检索或LangGraph，而不是先堆框架。",
+    "evidence": "docs/STATUS.md; docs/INTERVIEW_TRAINING.md",
+    "followup": "如何定义这两周改进完成的验收条件？",
+    "followup_hint": "定义可复现的真实trace、独立用例、错误率与文档门槛；完成标准不能只有界面截图。"
+  },
+  {
+    "id": "Q49",
+    "lesson": 12,
+    "topic": "tools",
+    "question": "MCP与Function Calling是什么关系？",
+    "answer": "Function Calling描述模型提出工具请求和应用返回结果的机制；MCP标准化应用与外部工具、资源服务的连接。可以由MCP提供工具，再转成模型可用说明。本项目使用本地注册表，没有实现MCP服务。",
+    "evidence": "补充阅读：MCP官方介绍；docs/RESEARCH.md",
+    "followup": "接入MCP后，参数检查和最终业务校验能否省略？",
+    "followup_hint": "不能。连接协议标准化与业务规则验证不同，仍要检查参数、权限和最终约束。"
+  },
+  {
+    "id": "Q50",
+    "lesson": 12,
+    "topic": "project",
+    "question": "LangGraph的State、Node、Edge会怎样对应本项目？",
+    "answer": "State可放消息、权威request和证据；Node对应模型请求、工具执行、最终校验；条件Edge根据是否有tool_calls或校验失败分流。检查点可恢复图执行进度，当前SQLite主要保存完成回合的历史和结果。",
+    "evidence": "docs/ARCHITECTURE.md；LangGraph官方文档",
+    "followup": "模型调用到一半进程退出，当前SQLite能从那个工具节点续跑吗？",
+    "followup_hint": "不能从中间工具节点恢复；会从最后完成历史开始重跑。需额外节点级持久化或图检查点。"
+  },
+  {
+    "id": "Q51",
+    "lesson": 12,
+    "topic": "model",
+    "question": "Transformer的注意力在做什么？",
+    "answer": "用Q与K计算相关性权重，再对V加权聚合，常见形式softmax(QKᵀ/√d)V。传统全注意力的序列长度成本随n²增长；这是模型基础，本项目直接调用API，没有训练Transformer。",
+    "evidence": "补充阅读：Attention Is All You Need；docs/RESEARCH.md",
+    "followup": "为什么decoder生成时需要因果mask？",
+    "followup_hint": "因果mask禁止当前token看到未来token，保证训练和逐步生成的条件一致。"
+  },
+  {
+    "id": "Q52",
+    "lesson": 12,
+    "topic": "system",
+    "question": "SQLite事务上下文为什么仍需要显式关闭连接？",
+    "answer": "事务提交或回滚与释放连接是两件事。项目用contextmanager包住with connection处理事务，再在finally关闭连接。这个问题在Python3.14的ResourceWarning里被发现并修复。",
+    "evidence": "memory.py: SessionStore.connect",
+    "followup": "如果事务中间抛异常，提交、回滚、关闭分别发生什么？",
+    "followup_hint": "事务块中异常触发回滚，正常结束提交；finally无论哪条路径都关闭连接。"
+  },
+  {
+    "id": "Q53",
+    "lesson": 12,
+    "topic": "python",
+    "question": "面试要求手写一个简化工具注册表，你会怎样组织？",
+    "answer": "先用名字到函数的字典限定可调用工具，检查参数整体是字典，再做必要字段与类型检查，调用函数并把指定异常转成错误结果。不要用eval执行模型文本；实现之后用成功、缺字段、未知名字三个反例验证。",
+    "evidence": "tools.py: ToolRegistry; examples/lesson02/03_registry_errors.py",
+    "followup": "不用getattr，改成显式函数映射实现同样行为。",
+    "followup_hint": "构造名字到绑定函数的字典，查到函数后用**arguments调用；仍先校验名字与参数。"
+  },
+  {
+    "id": "Q54",
+    "lesson": 12,
+    "topic": "evaluation",
+    "question": "如何从大量线上日志整理有限评测集？",
+    "answer": "先按业务、工具路径、失败类型和风险分层，去重并抽样；保留高频、严重和边界案例，由人工确认预期结果，维护版本与回归记录。当前只有本地开发日志，未实施线上日志采样。",
+    "evidence": "docs/RESEARCH.md；docs/INTERVIEW_TRAINING.md",
+    "followup": "如何避免把含隐私的原始日志直接加入公开测试集？",
+    "followup_hint": "先去除不必要身份和凭据等敏感字段，再做分层采样；公开数据还需确认可分享范围。"
+  }
+]

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "weekend-agent"
+version = "0.2.0"
+description = "A small, learnable city day-trip agent"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+weekend-agent = "weekend_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+weekend_agent = ["data/*.json", "web/*"]

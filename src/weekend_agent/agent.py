@@ -23,6 +23,7 @@ class RunResult:
     final_checks: int = 0
     input_tokens: int = 0
     output_tokens: int = 0
+    http_attempts: int = 0
 
 
 class TripAgent:
@@ -33,10 +34,13 @@ class TripAgent:
         self.max_rounds = max_rounds
         self.max_tool_calls = max_tool_calls
         self.messages: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
+        self.provider_calls = 0
+        self.tool_calls = 0
 
     def run(self, question: str, request: TripRequest | None = None) -> RunResult:
         if not question.strip():
             raise ValueError("问题不能为空")
+        self.provider_calls = self.tool_calls = 0
         content = question if request is None else ("STRUCTURED_REQUEST:\n" +
                   json.dumps(request.to_dict(), ensure_ascii=False) + "\nUSER_NOTE:\n" + question)
         self.messages.append({"role": "user", "content": content})
@@ -48,6 +52,7 @@ class TripAgent:
         guides: dict[str, dict] = {}
         final_checks = input_tokens = output_tokens = 0
         for round_index in range(1, self.max_rounds + 1):
+            self.provider_calls += 1
             message = self.provider.complete(self.messages, self.registry.schemas)
             if not isinstance(message, dict) or message.get("role") != "assistant":
                 raise RuntimeError("模型没有返回有效的 assistant 消息")
@@ -87,7 +92,7 @@ class TripAgent:
                 events.append({"kind": "answer", "content": answer})
                 return RunResult(answer, events, round_index, tool_count,
                                  round(perf_counter() - started, 3), last_check, plan, final_checks,
-                                 input_tokens, output_tokens)
+                                 input_tokens, output_tokens, getattr(self.provider, "http_attempts", 0))
             if tool_count + len(calls) > self.max_tool_calls:
                 self._remove_pending_message()
                 raise RuntimeError("达到工具调用上限；请缩小问题范围后重试。")
@@ -103,6 +108,7 @@ class TripAgent:
                     arguments = raw
                     result = {"ok": False, "error": "工具参数不是有效的 JSON"}
                 tool_count += 1
+                self.tool_calls = tool_count
                 if name == "check_itinerary":
                     last_check = result.get("data") if result.get("ok") else None
                 if result.get("ok") and name == "search_places":

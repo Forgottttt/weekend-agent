@@ -20,6 +20,8 @@ def parser():
     action.add_argument("--evaluate", action="store_true", help="运行12个固定回归用例")
     action.add_argument("--practice", action="store_true", help="运行面试问答练习")
     action.add_argument("--legacy-demo", action="store_true", help="第一版半天固定示例，供早期课程对照")
+    action.add_argument("--doctor", action="store_true", help="离线检查模型配置，不联网、不显示密钥")
+    action.add_argument("--check-api", action="store_true", help="两轮真实API请求，验证一次天气工具调用及结果回传，会消耗API额度")
     result.add_argument("--port", type=int, default=8765)
     result.add_argument("--topic", default="tools")
     result.add_argument("--count", type=int, default=3)
@@ -59,6 +61,11 @@ def main(argv=None):
     args = parser().parse_args(argv)
     mode = "live" if args.live else "demo"
     try:
+        if args.doctor or args.check_api:
+            from .diagnostics import doctor, check_api
+            report = doctor() if args.doctor else check_api()
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0 if report.get("ready", report.get("ok", False)) else 1
         if args.serve:
             from .server import serve
             serve(args.port)

@@ -1,27 +1,90 @@
 """路径与运行限制放在这里，避免每个文件各写一份。"""
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlsplit
 
 DATA_FILE = Path(__file__).resolve().parent / "data" / "hangzhou_demo.json"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+ENV_KEYS = {"LLM_API_KEY", "DEEPSEEK_API_KEY", "LLM_BASE_URL", "LLM_MODEL",
+            "LLM_TIMEOUT_SECONDS", "LLM_MAX_TOKENS", "LLM_MAX_RETRIES"}
+
+
+def read_env_file(path: Path) -> dict[str, str]:
+    """读取简单 KEY=VALUE 文件，不执行 shell、不展开变量、不修改进程环境。"""
+    if not path.exists():
+        return {}
+    values = {}
+    for line_number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        key, separator, value = line.partition("=")
+        key, value = key.strip(), value.strip()
+        if not separator or key not in ENV_KEYS:
+            raise ValueError(f".env 第 {line_number} 行格式或配置名不正确，请对照 .env.example")
+        if value[:1] in ("'", '"'):
+            if len(value) < 2 or value[-1] != value[0]:
+                raise ValueError(f".env 第 {line_number} 行引号未闭合")
+            value = value[1:-1]
+        values[key] = value
+    return values
 
 
 @dataclass(frozen=True)
 class ModelConfig:
-    api_key: str
+    api_key: str = field(repr=False)
     base_url: str
     model: str
-    timeout_seconds: int = 45
+    timeout_seconds: int = 60
+    max_tokens: int = 4096
+    max_retries: int = 1
+
+    def __post_init__(self):
+        address = urlsplit(self.base_url)
+        if (address.scheme != "https" or not address.hostname or address.username
+                or address.password or address.query or address.fragment):
+            raise ValueError("LLM_BASE_URL 必须是没有凭据、查询参数或片段的 HTTPS 基础地址")
+        if address.path.rstrip("/").endswith("/chat/completions"):
+            raise ValueError("LLM_BASE_URL 只填基础地址，不要附加 /chat/completions")
+        if not self.model.strip() or any(c.isspace() for c in self.model):
+            raise ValueError("LLM_MODEL 不能为空或包含空白；官方 Flash 使用 deepseek-flash")
+        for name, value, low, high in (("LLM_TIMEOUT_SECONDS", self.timeout_seconds, 5, 300),
+                                       ("LLM_MAX_TOKENS", self.max_tokens, 64, 16384),
+                                       ("LLM_MAX_RETRIES", self.max_retries, 0, 2)):
+            if type(value) is not int or not low <= value <= high:
+                raise ValueError(f"{name} 必须是 {low}–{high} 的整数（本项目限制）")
+
+    def public_info(self) -> dict:
+        return {"base_url": self.base_url, "model": self.model,
+                "key_configured": bool(self.api_key), "timeout_seconds": self.timeout_seconds,
+                "max_tokens": self.max_tokens, "max_retries": self.max_retries,
+                "thinking": "disabled" if urlsplit(self.base_url).hostname == "api.deepseek.com" else "provider_default"}
 
     @classmethod
-    def from_env(cls) -> "ModelConfig":
-        api_key = os.getenv("LLM_API_KEY", "").strip()
+    def from_env(cls, env_file: Path | None = None, environ: dict | None = None,
+                 require_key: bool = True) -> "ModelConfig":
+        file_values = read_env_file(env_file if env_file is not None else PROJECT_ROOT / ".env")
+        environment = os.environ if environ is None else environ
+        values = {**file_values, **{k: v for k, v in environment.items() if k in ENV_KEYS}}
+        # 两种密钥变量名都支持；进程环境优先于文件，即使它使用另一种变量名。
+        api_key = next((source[key].strip() for source in (environment, file_values)
+                        for key in ("LLM_API_KEY", "DEEPSEEK_API_KEY") if key in source), "")
         if not api_key or api_key == "replace_with_your_key":
-            raise ValueError("尚未设置 LLM_API_KEY。先运行 --demo，或在终端配置模型密钥。")
+            api_key = ""
+            if require_key:
+                raise ValueError("尚未设置 LLM_API_KEY。请在项目根目录 .env 填写密钥，或设置环境变量。")
+        def integer(key, default):
+            try:
+                return int(values.get(key, default))
+            except (TypeError, ValueError):
+                raise ValueError(f"{key} 必须是整数") from None
         return cls(
             api_key=api_key,
-            base_url=os.getenv("LLM_BASE_URL", "https://api.deepseek.com").rstrip("/"),
-            model=os.getenv("LLM_MODEL", "deepseek-flash"),
+            base_url=values.get("LLM_BASE_URL", "https://api.deepseek.com").strip().rstrip("/"),
+            model=values.get("LLM_MODEL", "deepseek-flash").strip(),
+            timeout_seconds=integer("LLM_TIMEOUT_SECONDS", 60),
+            max_tokens=integer("LLM_MAX_TOKENS", 4096),
+            max_retries=integer("LLM_MAX_RETRIES", 1),
         )

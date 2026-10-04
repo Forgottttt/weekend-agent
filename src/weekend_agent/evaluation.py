@@ -36,11 +36,13 @@ def evaluate(mode: str = "demo", output_dir: Path | None = None) -> dict:
                              "pass": actual == case["expected_status"], "baseline_valid": baseline_valid,
                              "duration_seconds": result["duration_seconds"], "provider_calls": result["provider_calls"],
                              "tool_calls": result["tool_calls"], "model_calls": result["model_calls"],
+                             "http_attempts": result["http_attempts"],
                              "input_tokens": result["input_tokens"], "output_tokens": result["output_tokens"],
                              "checked": result["last_check"]})
             except (ValueError, RuntimeError) as error:
                 rows.append({"id": case["id"], "expected": case["expected_status"], "actual": "error",
-                             "pass": False, "baseline_valid": baseline_valid, "error": str(error)})
+                             "pass": False, "baseline_valid": baseline_valid, "error": str(error),
+                             **getattr(error, "metrics", {})})
     durations = sorted(row["duration_seconds"] for row in rows if "duration_seconds" in row)
     planned = [row for row in rows if row["actual"] == "planned"]
     report = {"mode": mode, "dataset": "eval_cases_v1_12", "case_count": len(rows),
@@ -48,8 +50,11 @@ def evaluate(mode: str = "demo", output_dir: Path | None = None) -> dict:
               "planned_count": len(planned), "validated_plan_count": sum(bool(row["checked"]["valid"]) for row in planned),
               "baseline_valid_count": sum(row["baseline_valid"] for row in rows),
               "model_calls": sum(row.get("model_calls", 0) for row in rows),
+              "http_attempts": sum(row.get("http_attempts", 0) for row in rows),
+              "input_tokens": sum(row.get("input_tokens", 0) for row in rows),
+              "output_tokens": sum(row.get("output_tokens", 0) for row in rows),
               "median_seconds": statistics.median(durations) if durations else None,
-              "limitations": "开发期小型回归集；基线较弱；demo 是规则流程，不代表大模型成功率；未做盲测或用户研究。",
+              "limitations": "开发期小型回归集；基线较弱；demo不代表模型能力；计数包含失败任务，usage仅含已收到的响应，丢失响应可能仍计费；未做盲测或用户研究。",
               "cases": rows}
     target_dir = output_dir or PROJECT_ROOT / "outputs"
     target_dir.mkdir(parents=True, exist_ok=True)

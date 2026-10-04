@@ -227,6 +227,16 @@ class HTTPTests(unittest.TestCase):
         self.assertEqual(saved["result"]["plan"]["status"], "planned")
         self.assertTrue(saved["request"]["rain"])
 
+    def test_health_reports_readiness_without_exposing_key(self):
+        config = ModelConfig("fake-secret-for-test", "https://api.deepseek.com", "deepseek-flash")
+        with patch("weekend_agent.diagnostics.ModelConfig.from_env", return_value=config):
+            with urlopen(self.base + "/api/health") as response:
+                raw = response.read().decode()
+        self.assertNotIn("fake-secret-for-test", raw)
+        health = json.loads(raw)
+        self.assertTrue(health["model"]["ready"])
+        self.assertFalse(health["model"]["network_used"])
+
     def test_invalid_request_and_cross_origin_are_rejected(self):
         with self.assertRaises(HTTPError) as error:
             self.post({"request": {"group_size": True}})

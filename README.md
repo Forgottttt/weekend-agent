@@ -2,7 +2,7 @@
 
 一个可运行、可逐课学习的城市行程Agent项目：表单输入→工具调用→资料检索→最终约束校验→网页展示→会话保存。
 
-Python 3.11以上，只用标准库，不需要安装第三方运行依赖。项目版本0.2.0。**全部地点、天气、费用、路线和资料均为虚构教学数据。真实模型适配器已准备，当前尚未完成真实API调用及效果评测。**
+Python 3.11以上，只用标准库，不需要安装第三方运行依赖。项目版本0.3.0。**全部地点、天气、费用、路线和资料均为虚构教学数据。真实模型适配器已准备，当前尚未完成真实API调用及效果评测。**
 
 ## 从 GitHub 获取
 
@@ -22,7 +22,7 @@ cd /path/to/weekend-agent  # 替换为你自己的项目目录
 python3 main.py --serve
 ```
 
-打开 [本地演示](http://127.0.0.1:8765)。可修改预算、人数、时间、兴趣、雨天、室内外和用餐要求；刷新恢复最近完成结果。切换离线/模型模式时新建会话。
+打开 [本地演示](http://127.0.0.1:8765)。可修改预算、人数、时间、兴趣、雨天、室内外和用餐要求；刷新恢复最近完成结果。切换离线/模型模式时自动新建会话并保留表单条件。
 
 离线演示只理解表单条件，不理解自由文本，使用贪心规则流程。真实模型模式可以处理补充文本，但权威表单约束仍由应用控制；修改预算请明确改表单，不能仅在补充文本里放宽条件。
 
@@ -44,7 +44,7 @@ python3 main.py --demo --chat
 
 ## 十二课与面试训练
 
-从 [统一课程入口](docs/LEARNING.md)开始。每课都有具体文件、可运行脚本、执行过程、变量变化、改动练习和面试问题。
+从 [统一课程入口](docs/LEARNING.md)开始。第三至十二课已扩写为完整精读讲义：前置知识、文件关系、逐步变量推演、错误反例、练习参考答案与面试追问。现有25个分课脚本，其中新增9个深入实验；[学习记录](docs/STUDY_LOG.md)留给你填写，不自动标记掌握。
 
 | 课次 | 内容 |
 |---|---|
@@ -80,21 +80,21 @@ python3 main.py --evaluate
 
 测试包含业务约束、协议错误、最终预算绕过、伪造引用、会话恢复、上下文配对、并发与本地HTTP。12例固定评测是开发期离线回归，demo真实模型调用为0；不能称为真实模型成功率。报告在outputs/eval_*.json，另有较弱的硬编码行程基线。
 
-## 接入自己的模型
+## 接入DeepSeek官方V4.1 Flash
 
-兼容Chat Completions工具调用协议的接口可通过环境变量配置。macOS默认zsh中输入密钥不回显：
+详细步骤与错误解释见 [第11课](docs/LESSON_11.md)。截至2026-10-04，官方模型标识为`deepseek-flash`，基础地址为`https://api.deepseek.com`，依据[官方说明](https://api-docs.deepseek.com/zh-cn/)。
+
+项目自动读取根目录`.env`，进程环境变量优先。第一次获取项目可运行`cp -n .env.example .env`，然后在本地`.env`填写`LLM_API_KEY`；不要把真实密钥写进`.env.example`或聊天。
 
 ```bash
-read -s "LLM_API_KEY?请输入自己的模型API密钥："
-export LLM_API_KEY
-export LLM_BASE_URL='https://api.deepseek.com'
-export LLM_MODEL='deepseek-flash'
-python3 main.py --live --question '请按表单规划，优先拍照。'
+python3 main.py --doctor       # 不联网，只检查脱敏配置状态
+python3 main.py --check-api    # 两轮真实请求：工具调用与回传，会消耗API额度
+python3 main.py --live --rain --budget 80
 ```
 
-模型名依据2026-10-03检索的 [DeepSeek官方文档](https://api-docs.deepseek.com/api/create-chat-completion/)，可自行改为所用服务支持的模型。`.env.example`只是说明，不自动加载。DeepSeek默认使用非thinking模式；接口对429、5xx或连接超时最多重试一次。其他服务差异需要实测。
+`ready=true`只表示本地配置就绪，不能证明认证成功。项目默认关闭thinking，输出上限4096、单次网络超时60秒、最多重试1次；可通过模板里的配置修改项目限制。截断响应会明确停止，401、402、429等错误给出对应处理提示。
 
-先验证单条调用，再考虑`--evaluate --live`批量调用；真实API可能收费。网页模型模式也需要在启动服务的终端配置环境变量。旅行数据仍为教学数据。
+先验证单个规划再考虑`--evaluate --live`的12例批量评测。当前所有旅行数据仍为虚构教学数据；模型效果以真实运行报告为准。网页配置状态不显示密钥，修改代码后应重启服务。
 
 ## 核心文件
 
@@ -103,6 +103,8 @@ src/weekend_agent/
   request.py       表单权威条件
   tools.py         五个工具、Schema与参数校验
   retrieval.py     字符二元组BM25
+  config.py        .env、环境变量及调用限制
+  diagnostics.py   离线配置检查与两轮API连通测试
   providers.py     模型API适配与早期固定演示
   planning.py      多站离线规则流程
   agent.py         消息循环与调用护栏

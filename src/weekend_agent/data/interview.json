@@ -334,7 +334,7 @@
     "lesson": 9,
     "topic": "system",
     "question": "模型密钥怎样配置，为什么不能放前端？",
-    "answer": "从服务进程环境变量读取，通过Authorization发送给模型服务，不写入网页、调用日志和数据库。前端可被查看，因此不能存密钥。本地服务无账号鉴权，只绑定loopback，不能原样公开部署。",
+    "answer": "从服务进程环境变量或被Git忽略的项目.env读取，环境变量优先；通过Authorization发送给模型服务，不写入网页、调用日志和数据库。前端可被查看，因此不能存密钥。本地服务无账号鉴权，只绑定loopback，不能原样公开部署。",
     "evidence": "config.py; providers.py; server.py",
     "followup": "上线前还需要哪些鉴权、配额和日志处理？",
     "followup_hint": "需要身份鉴权、用户数据隔离、调用配额、费用控制、密钥管理和监控；当前只在本机演示。"
@@ -394,7 +394,7 @@
     "lesson": 10,
     "topic": "evaluation",
     "question": "如何观测延迟和成本，重试是否也算费用？",
-    "answer": "记录模型逻辑调用、工具请求、最终检查、耗时和API返回的token usage。HTTP重试可能增加实际请求和费用，当前usage不能覆盖丢失的响应；具体价格需按服务商账单核验，demo模型调用是0。",
+    "answer": "分别记录模型逻辑调用、实际HTTP尝试、工具请求、最终检查、耗时及已返回usage；失败任务也纳入调用统计。重试或丢失响应可能已经计费，观测usage不等于精确账单；demo模型调用为0。",
     "evidence": "providers.py; agent.py: RunResult; evaluation.py",
     "followup": "为什么不能把离线毫秒级耗时当成真实模型响应延迟？",
     "followup_hint": "离线没有网络和模型生成；真实模型延迟由网络、排队、生成及工具轮数共同决定。"

@@ -45,3 +45,7 @@
 ## 后续调研如何更新
 
 保存岗位、面试日期、问题类别、原始链接，优先原作者自述；将技术答案回到官方文档或论文校验。不要把聚合帖题量当频率，不因帖子谈到某项技术就强行加进简历。
+
+## 2026-10-04：DeepSeek官方接入补充
+
+用户明确选择DeepSeek官方API。核对[首次调用](https://api-docs.deepseek.com/zh-cn/)、[接口参数与finish_reason](https://api-docs.deepseek.com/api/create-chat-completion/)、[思考模式工具历史要求](https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/)、[错误码](https://api-docs.deepseek.com/zh-cn/quick_start/error_codes/)。当前API模型ID为deepseek-flash，对应V4.1 Flash；项目固定非思考模式。教材11解释本项目的实现选择，不把配置完成或mock测试当成真实调用效果。

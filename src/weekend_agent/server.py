@@ -6,6 +6,7 @@ from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
 from .service import BusyError, PlanningService
+from .diagnostics import doctor
 
 
 def create_server(port: int = 8765, service: PlanningService | None = None):
@@ -32,7 +33,11 @@ def create_server(port: int = 8765, service: PlanningService | None = None):
                 return self.send(403, {"error": "只允许本地访问"})
             parsed = urlparse(self.path)
             if parsed.path == "/api/health":
-                return self.send(200, {"ok": True, "data_mode": "fictional_demo"})
+                try:
+                    model = doctor()
+                except (ValueError, OSError):
+                    model = {"ready": False, "error": "模型配置有误，请在终端运行 python3 main.py --doctor 检查。"}
+                return self.send(200, {"ok": True, "data_mode": "fictional_demo", "model": model})
             if parsed.path == "/api/session":
                 try:
                     session_id = parse_qs(parsed.query).get("id", [""])[0]

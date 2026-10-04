@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "weekend-agent"
-version = "0.2.0"
+version = "0.3.0"
 description = "A small, learnable city day-trip agent"
 requires-python = ">=3.11"
 dependencies = []

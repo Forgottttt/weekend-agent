@@ -17,6 +17,14 @@ class BusyError(RuntimeError):
     pass
 
 
+class PlanningError(RuntimeError):
+    """保留失败任务的计数；否则评测会漏掉失败时已经发生的模型请求。"""
+
+    def __init__(self, message: str, metrics: dict):
+        super().__init__(message)
+        self.metrics = metrics
+
+
 class PlanningService:
     def __init__(self, database: Path | None = None):
         self.store = SessionStore(database or PROJECT_ROOT / "outputs" / "sessions.sqlite3")
@@ -54,11 +62,21 @@ class PlanningService:
             if prior:
                 agent.messages = select_context(prior)
             retained = len(agent.messages)
-            run = agent.run(question, request)
+            try:
+                run = agent.run(question, request)
+            except RuntimeError as error:
+                usage = getattr(provider, "total_usage", {})
+                raise PlanningError(str(error), {
+                    "provider_calls": agent.provider_calls, "tool_calls": agent.tool_calls,
+                    "model_calls": agent.provider_calls if mode == "live" else 0,
+                    "http_attempts": getattr(provider, "http_attempts", 0),
+                    "input_tokens": usage.get("prompt_tokens", 0),
+                    "output_tokens": usage.get("completion_tokens", 0),
+                }) from None
             result = {**asdict(run), "mode": mode, "data_mode": "fictional_demo",
                       "model_calls": run.provider_calls if mode == "live" else 0,
                       "model": provider.config.model if mode == "live" else "offline-rule-v1",
-                      "prompt_version": "v0.2.0",
+                      "prompt_version": "v0.3.0",
                       "session_id": session_id, "request": request.to_dict(),
                       "context_messages": retained}
             # 完整旧记录加本轮新消息；不把截断后的上下文当成完整历史。

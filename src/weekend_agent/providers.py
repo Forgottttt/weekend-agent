@@ -22,15 +22,20 @@ class APIProvider:
     def __init__(self, config: ModelConfig):
         self.config = config
         self.last_usage: dict = {}
+        self.total_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+        self.http_attempts = 0
 
     def complete(self, messages: list[dict], tools: list[dict]) -> dict:
+        self.last_usage = {}
         payload = {
             "model": self.config.model, "messages": messages,
-            "tools": tools, "tool_choice": "auto", "stream": False,
+            "stream": False,
         }
+        if tools:
+            payload.update(tools=tools, tool_choice="auto")
         if urlparse(self.config.base_url).hostname == "api.deepseek.com":
             payload["thinking"] = {"type": "disabled"}
-        payload["max_tokens"] = 2048
+        payload["max_tokens"] = self.config.max_tokens
         request = Request(
             self.config.base_url + "/chat/completions",
             data=json.dumps(payload, ensure_ascii=False, allow_nan=False).encode("utf-8"),
@@ -47,9 +52,23 @@ class APIProvider:
                 usage = {}
             self.last_usage = {key: value for key, value in usage.items()
                                if key in ("prompt_tokens", "completion_tokens") and type(value) is int and value >= 0}
-            message = result["choices"][0]["message"]
+            for key, value in self.last_usage.items():
+                self.total_usage[key] += value
+            choice = result["choices"][0]
+            finish = choice.get("finish_reason")
+            if finish == "length":
+                raise RuntimeError("模型输出被截断（finish_reason=length）。请增加 LLM_MAX_TOKENS 或缩小任务；本次不会执行不完整的工具参数。")
+            if finish not in (None, "stop", "tool_calls"):
+                raise RuntimeError("模型没有正常完成响应，请稍后重试或缩小任务。")
+            message = choice["message"]
             if not isinstance(message, dict):
                 raise ValueError("assistant消息不是对象")
+            if message.get("role", "assistant") != "assistant":
+                raise ValueError("响应角色不是assistant")
+            if message.get("content") is not None and not isinstance(message["content"], str):
+                raise ValueError("content必须是字符串或null")
+            if message.get("tool_calls") is not None and not isinstance(message["tool_calls"], list):
+                raise ValueError("tool_calls必须是列表")
             clean = {"role": "assistant", "content": message.get("content")}
             if message.get("tool_calls"):
                 clean["tool_calls"] = message["tool_calls"]
@@ -60,26 +79,34 @@ class APIProvider:
         except HTTPError as error:
             code = error.code
             error.close()
-            raise RuntimeError(f"模型服务返回 HTTP {code}，请检查模型配置、权限和额度。") from None
+            hint = {400: "请求参数或消息协议不兼容，请检查模型名和工具消息配对。",
+                    401: "密钥无效或已失效，请检查本地 LLM_API_KEY。",
+                    402: "账户余额不足，请到 DeepSeek 平台检查额度。",
+                    403: "当前账户或密钥没有访问权限，请检查服务权限。",
+                    404: "接口或模型不存在，请检查 LLM_BASE_URL 和 LLM_MODEL。",
+                    422: "请求参数不符合服务要求，请检查模型与参数配置。",
+                    429: "请求过于频繁，请稍后重试。"}.get(code, "服务暂时不可用，请稍后重试。")
+            raise RuntimeError(f"模型服务返回 HTTP {code}：{hint}") from None
         except (URLError, TimeoutError):
             raise RuntimeError("模型请求失败或超时，请检查网络和 LLM_BASE_URL。") from None
-        except (KeyError, IndexError, ValueError, TypeError):
+        except (KeyError, IndexError, ValueError, TypeError, AttributeError):
             raise RuntimeError("模型响应格式异常，没有取得有效的 assistant 消息。") from None
 
     def _request(self, request: Request) -> dict:
-        # 只对超时/连接失败和 429、5xx 重试一次；不重试权限或参数错误。
-        for attempt in range(2):
+        # 有界指数退避；默认一次重试，最多两次，不重试权限或参数错误。
+        for attempt in range(self.config.max_retries + 1):
             try:
+                self.http_attempts += 1
                 with urlopen(request, timeout=self.config.timeout_seconds) as response:
                     return json.loads(response.read().decode("utf-8"))
             except HTTPError as error:
-                if attempt or (error.code != 429 and not 500 <= error.code <= 599):
+                if attempt == self.config.max_retries or (error.code != 429 and not 500 <= error.code <= 599):
                     raise
                 error.close()
             except (URLError, TimeoutError):
-                if attempt:
+                if attempt == self.config.max_retries:
                     raise
-            sleep(0.5)
+            sleep(0.5 * (2 ** attempt))
         raise RuntimeError("模型请求没有完成")
 
 

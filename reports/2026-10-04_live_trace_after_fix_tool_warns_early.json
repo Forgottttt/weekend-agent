@@ -1,0 +1,946 @@
+{
+  "answer": "周末去哪玩 · 全部为虚构教学数据\n本轮未找到通过校验的候选方案；这不证明不存在可行方案。可以放宽预算、时间或用餐要求后再试。\n检索参考：[g_food] 美食与午餐、[g_budget] 预算与费用口径、[g_unknown] 信息不足与不确定性",
+  "events": [
+    {
+      "kind": "tool",
+      "round": 1,
+      "name": "get_weather",
+      "arguments": {
+        "city": "杭州",
+        "travel_date": "2026-11-21"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "city": "杭州",
+          "date": "2026-11-21",
+          "condition": "晴",
+          "temperature_c": 23,
+          "data_mode": "fictional_demo",
+          "note": "固定教学天气，与所填日期的实际天气无关。"
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 1,
+      "name": "search_places",
+      "arguments": {
+        "city": "杭州",
+        "tags": [
+          "拍照"
+        ],
+        "indoor": null,
+        "max_price": 20
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "data_mode": "fictional_demo",
+          "places": [
+            {
+              "id": "p01",
+              "name": "示例湖畔公园",
+              "category": "activity",
+              "tags": [
+                "拍照",
+                "自然"
+              ],
+              "indoor": false,
+              "price_per_person": 0,
+              "visit_minutes": 90,
+              "open": "08:00",
+              "close": "18:00",
+              "position": [
+                0,
+                0
+              ]
+            },
+            {
+              "id": "p02",
+              "name": "示例花园",
+              "category": "activity",
+              "tags": [
+                "拍照",
+                "自然"
+              ],
+              "indoor": false,
+              "price_per_person": 20,
+              "visit_minutes": 60,
+              "open": "09:00",
+              "close": "17:00",
+              "position": [
+                1,
+                0
+              ]
+            },
+            {
+              "id": "p03",
+              "name": "示例河边步道",
+              "category": "activity",
+              "tags": [
+                "拍照",
+                "散步"
+              ],
+              "indoor": false,
+              "price_per_person": 0,
+              "visit_minutes": 60,
+              "open": "07:00",
+              "close": "20:00",
+              "position": [
+                1,
+                1
+              ]
+            },
+            {
+              "id": "p07",
+              "name": "示例历史街区",
+              "category": "activity",
+              "tags": [
+                "拍照",
+                "文化"
+              ],
+              "indoor": false,
+              "price_per_person": 0,
+              "visit_minutes": 60,
+              "open": "09:00",
+              "close": "20:00",
+              "position": [
+                0,
+                1
+              ]
+            },
+            {
+              "id": "p08",
+              "name": "示例夜景广场",
+              "category": "activity",
+              "tags": [
+                "拍照",
+                "散步"
+              ],
+              "indoor": false,
+              "price_per_person": 0,
+              "visit_minutes": 60,
+              "open": "17:00",
+              "close": "22:00",
+              "position": [
+                2,
+                0
+              ]
+            },
+            {
+              "id": "p09",
+              "name": "示例城市展览馆",
+              "category": "activity",
+              "tags": [
+                "拍照",
+                "文化"
+              ],
+              "indoor": true,
+              "price_per_person": 20,
+              "visit_minutes": 90,
+              "open": "09:00",
+              "close": "17:00",
+              "position": [
+                0,
+                0
+              ]
+            }
+          ],
+          "count": 6
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 1,
+      "name": "search_places",
+      "arguments": {
+        "city": "杭州",
+        "tags": [
+          "美食"
+        ],
+        "indoor": null,
+        "max_price": 20
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "data_mode": "fictional_demo",
+          "places": [
+            {
+              "id": "p04",
+              "name": "示例露天市集",
+              "category": "activity",
+              "tags": [
+                "美食",
+                "购物"
+              ],
+              "indoor": false,
+              "price_per_person": 15,
+              "visit_minutes": 60,
+              "open": "11:00",
+              "close": "19:00",
+              "position": [
+                2,
+                1
+              ]
+            }
+          ],
+          "count": 1
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 1,
+      "name": "search_guides",
+      "arguments": {
+        "query": "杭州 拍照 美食 一日游 预算",
+        "top_k": 5
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "documents": [
+            {
+              "id": "g_photo",
+              "title": "拍照与营业时间",
+              "text": "虚构教学建议：拍照活动可以选择带拍照标签的公园、历史街区、摄影展。到达时间和游玩结束时间都应在营业时段内。摄影展是室内活动，夜景广场从傍晚才开放。",
+              "updated_at": "2026-10-03",
+              "source": "本项目自编虚构教学资料",
+              "score": 2.4363
+            },
+            {
+              "id": "g_food",
+              "title": "美食与午餐",
+              "text": "虚构教学建议：美食兴趣可以匹配面馆、家常菜馆、咖啡馆和小吃店。地点名称只是教学示例，不是真实店铺推荐。要求用餐时必须安排至少一个 food 类地点，价格和访问时长来自教学地点表。",
+              "updated_at": "2026-10-03",
+              "source": "本项目自编虚构教学资料",
+              "score": 2.0831
+            },
+            {
+              "id": "g_budget",
+              "title": "预算与费用口径",
+              "text": "虚构教学建议：每人预算应包含地点价格以及相邻地点交通费。全组费用等于每人费用乘人数。购物、往返起点交通与额外消费不在本项目估算范围中，不能据此承诺实际旅行总价。",
+              "updated_at": "2026-10-03",
+              "source": "本项目自编虚构教学资料",
+              "score": 1.3753
+            },
+            {
+              "id": "g_unknown",
+              "title": "信息不足与不确定性",
+              "text": "虚构教学建议：缺少真实票价、地址或营业时间时，应说明信息不足，不能凭空补充。算法没有找到方案不等于数学上证明不存在方案。遇到时间短、预算低，可以建议放宽条件再试。",
+              "updated_at": "2026-10-03",
+              "source": "本项目自编虚构教学资料",
+              "score": 1.0051
+            }
+          ],
+          "retrieval_method": "bm25_character_bigrams",
+          "data_mode": "fictional_demo"
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 2,
+      "name": "search_places",
+      "arguments": {
+        "city": "杭州",
+        "tags": [
+          "美食",
+          "小吃",
+          "面馆"
+        ],
+        "indoor": null,
+        "max_price": 20
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "data_mode": "fictional_demo",
+          "places": [
+            {
+              "id": "p04",
+              "name": "示例露天市集",
+              "category": "activity",
+              "tags": [
+                "美食",
+                "购物"
+              ],
+              "indoor": false,
+              "price_per_person": 15,
+              "visit_minutes": 60,
+              "open": "11:00",
+              "close": "19:00",
+              "position": [
+                2,
+                1
+              ]
+            }
+          ],
+          "count": 1
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 2,
+      "name": "get_route",
+      "arguments": {
+        "from_id": "p01",
+        "to_id": "p04"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "from_id": "p01",
+          "to_id": "p04",
+          "minutes": 35,
+          "fare_per_person": 2,
+          "data_mode": "fictional_demo",
+          "method": "fictional_grid_estimate"
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 2,
+      "name": "get_route",
+      "arguments": {
+        "from_id": "p04",
+        "to_id": "p07"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "from_id": "p04",
+          "to_id": "p07",
+          "minutes": 25,
+          "fare_per_person": 2,
+          "data_mode": "fictional_demo",
+          "method": "fictional_grid_estimate"
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 2,
+      "name": "get_route",
+      "arguments": {
+        "from_id": "p07",
+        "to_id": "p08"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "from_id": "p07",
+          "to_id": "p08",
+          "minutes": 35,
+          "fare_per_person": 2,
+          "data_mode": "fictional_demo",
+          "method": "fictional_grid_estimate"
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 3,
+      "name": "search_places",
+      "arguments": {
+        "city": "杭州",
+        "tags": [
+          "food"
+        ],
+        "indoor": null,
+        "max_price": 20
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "data_mode": "fictional_demo",
+          "places": [],
+          "count": 0
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 3,
+      "name": "search_places",
+      "arguments": {
+        "city": "杭州",
+        "tags": [
+          "美食"
+        ],
+        "indoor": null,
+        "max_price": 30
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "data_mode": "fictional_demo",
+          "places": [
+            {
+              "id": "p04",
+              "name": "示例露天市集",
+              "category": "activity",
+              "tags": [
+                "美食",
+                "购物"
+              ],
+              "indoor": false,
+              "price_per_person": 15,
+              "visit_minutes": 60,
+              "open": "11:00",
+              "close": "19:00",
+              "position": [
+                2,
+                1
+              ]
+            },
+            {
+              "id": "f04",
+              "name": "示例小吃店",
+              "category": "food",
+              "tags": [
+                "美食"
+              ],
+              "indoor": true,
+              "price_per_person": 25,
+              "visit_minutes": 45,
+              "open": "10:00",
+              "close": "19:00",
+              "position": [
+                0,
+                1
+              ]
+            }
+          ],
+          "count": 2
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 4,
+      "name": "get_route",
+      "arguments": {
+        "from_id": "p01",
+        "to_id": "f04"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "from_id": "p01",
+          "to_id": "f04",
+          "minutes": 15,
+          "fare_per_person": 2,
+          "data_mode": "fictional_demo",
+          "method": "fictional_grid_estimate"
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 4,
+      "name": "get_route",
+      "arguments": {
+        "from_id": "f04",
+        "to_id": "p07"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "from_id": "f04",
+          "to_id": "p07",
+          "minutes": 5,
+          "fare_per_person": 2,
+          "data_mode": "fictional_demo",
+          "method": "fictional_grid_estimate"
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 4,
+      "name": "check_itinerary",
+      "arguments": {
+        "stops": [
+          {
+            "place_id": "p01",
+            "start": "10:00"
+          },
+          {
+            "place_id": "f04",
+            "start": "12:00"
+          },
+          {
+            "place_id": "p07",
+            "start": "13:30"
+          },
+          {
+            "place_id": "p08",
+            "start": "16:00"
+          }
+        ],
+        "budget_per_person": 20,
+        "group_size": 2,
+        "start_time": "10:00",
+        "end_time": "18:00"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "valid": false,
+          "issues": [
+            "示例夜景广场的访问时间超出营业时段",
+            "预算超出：每人 31 元 > 20 元"
+          ],
+          "schedule": [
+            {
+              "place_id": "p01",
+              "name": "示例湖畔公园",
+              "start": "10:00",
+              "end": "11:30",
+              "price_per_person": 0,
+              "route_from_previous": null
+            },
+            {
+              "place_id": "f04",
+              "name": "示例小吃店",
+              "start": "12:00",
+              "end": "12:45",
+              "price_per_person": 25,
+              "route_from_previous": {
+                "from_id": "p01",
+                "to_id": "f04",
+                "minutes": 15,
+                "fare_per_person": 2,
+                "data_mode": "fictional_demo",
+                "method": "fictional_grid_estimate"
+              }
+            },
+            {
+              "place_id": "p07",
+              "name": "示例历史街区",
+              "start": "13:30",
+              "end": "14:30",
+              "price_per_person": 0,
+              "route_from_previous": {
+                "from_id": "f04",
+                "to_id": "p07",
+                "minutes": 5,
+                "fare_per_person": 2,
+                "data_mode": "fictional_demo",
+                "method": "fictional_grid_estimate"
+              }
+            },
+            {
+              "place_id": "p08",
+              "name": "示例夜景广场",
+              "start": "16:00",
+              "end": "17:00",
+              "price_per_person": 0,
+              "route_from_previous": {
+                "from_id": "p07",
+                "to_id": "p08",
+                "minutes": 35,
+                "fare_per_person": 2,
+                "data_mode": "fictional_demo",
+                "method": "fictional_grid_estimate"
+              }
+            }
+          ],
+          "cost_per_person": 31.0,
+          "group_size": 2,
+          "total_group_cost": 62.0,
+          "budget_per_person": 20,
+          "data_mode": "fictional_demo",
+          "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 5,
+      "name": "check_itinerary",
+      "arguments": {
+        "stops": [
+          {
+            "place_id": "p01",
+            "start": "10:00"
+          },
+          {
+            "place_id": "p04",
+            "start": "12:00"
+          },
+          {
+            "place_id": "p07",
+            "start": "14:00"
+          },
+          {
+            "place_id": "p08",
+            "start": "17:00"
+          }
+        ],
+        "budget_per_person": 20,
+        "group_size": 2,
+        "start_time": "10:00",
+        "end_time": "18:00"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "valid": false,
+          "issues": [
+            "到达示例露天市集前的交通时间不足",
+            "用户要求用餐，但行程中没有用餐地点",
+            "预算超出：每人 21 元 > 20 元"
+          ],
+          "schedule": [
+            {
+              "place_id": "p01",
+              "name": "示例湖畔公园",
+              "start": "10:00",
+              "end": "11:30",
+              "price_per_person": 0,
+              "route_from_previous": null
+            },
+            {
+              "place_id": "p04",
+              "name": "示例露天市集",
+              "start": "12:00",
+              "end": "13:00",
+              "price_per_person": 15,
+              "route_from_previous": {
+                "from_id": "p01",
+                "to_id": "p04",
+                "minutes": 35,
+                "fare_per_person": 2,
+                "data_mode": "fictional_demo",
+                "method": "fictional_grid_estimate"
+              }
+            },
+            {
+              "place_id": "p07",
+              "name": "示例历史街区",
+              "start": "14:00",
+              "end": "15:00",
+              "price_per_person": 0,
+              "route_from_previous": {
+                "from_id": "p04",
+                "to_id": "p07",
+                "minutes": 25,
+                "fare_per_person": 2,
+                "data_mode": "fictional_demo",
+                "method": "fictional_grid_estimate"
+              }
+            },
+            {
+              "place_id": "p08",
+              "name": "示例夜景广场",
+              "start": "17:00",
+              "end": "18:00",
+              "price_per_person": 0,
+              "route_from_previous": {
+                "from_id": "p07",
+                "to_id": "p08",
+                "minutes": 35,
+                "fare_per_person": 2,
+                "data_mode": "fictional_demo",
+                "method": "fictional_grid_estimate"
+              }
+            }
+          ],
+          "cost_per_person": 21.0,
+          "group_size": 2,
+          "total_group_cost": 42.0,
+          "budget_per_person": 20,
+          "data_mode": "fictional_demo",
+          "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 6,
+      "name": "check_itinerary",
+      "arguments": {
+        "stops": [
+          {
+            "place_id": "p01",
+            "start": "10:00"
+          },
+          {
+            "place_id": "p03",
+            "start": "11:45"
+          },
+          {
+            "place_id": "f04",
+            "start": "13:00"
+          }
+        ],
+        "budget_per_person": 20,
+        "group_size": 2,
+        "start_time": "10:00",
+        "end_time": "18:00"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "valid": false,
+          "issues": [
+            "到达示例河边步道前的交通时间不足",
+            "预算超出：每人 29 元 > 20 元"
+          ],
+          "schedule": [
+            {
+              "place_id": "p01",
+              "name": "示例湖畔公园",
+              "start": "10:00",
+              "end": "11:30",
+              "price_per_person": 0,
+              "route_from_previous": null
+            },
+            {
+              "place_id": "p03",
+              "name": "示例河边步道",
+              "start": "11:45",
+              "end": "12:45",
+              "price_per_person": 0,
+              "route_from_previous": {
+                "from_id": "p01",
+                "to_id": "p03",
+                "minutes": 25,
+                "fare_per_person": 2,
+                "data_mode": "fictional_demo",
+                "method": "fictional_grid_estimate"
+              }
+            },
+            {
+              "place_id": "f04",
+              "name": "示例小吃店",
+              "start": "13:00",
+              "end": "13:45",
+              "price_per_person": 25,
+              "route_from_previous": {
+                "from_id": "p03",
+                "to_id": "f04",
+                "minutes": 15,
+                "fare_per_person": 2,
+                "data_mode": "fictional_demo",
+                "method": "fictional_grid_estimate"
+              }
+            }
+          ],
+          "cost_per_person": 29.0,
+          "group_size": 2,
+          "total_group_cost": 58.0,
+          "budget_per_person": 20,
+          "data_mode": "fictional_demo",
+          "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 6,
+      "name": "get_route",
+      "arguments": {
+        "from_id": "p01",
+        "to_id": "p03"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "from_id": "p01",
+          "to_id": "p03",
+          "minutes": 25,
+          "fare_per_person": 2,
+          "data_mode": "fictional_demo",
+          "method": "fictional_grid_estimate"
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 6,
+      "name": "get_route",
+      "arguments": {
+        "from_id": "p03",
+        "to_id": "f04"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "from_id": "p03",
+          "to_id": "f04",
+          "minutes": 15,
+          "fare_per_person": 2,
+          "data_mode": "fictional_demo",
+          "method": "fictional_grid_estimate"
+        }
+      }
+    },
+    {
+      "kind": "tool",
+      "round": 7,
+      "name": "check_itinerary",
+      "arguments": {
+        "stops": [
+          {
+            "place_id": "p01",
+            "start": "10:00"
+          },
+          {
+            "place_id": "f04",
+            "start": "11:30"
+          }
+        ],
+        "budget_per_person": 20,
+        "group_size": 2,
+        "start_time": "10:00",
+        "end_time": "18:00"
+      },
+      "result": {
+        "ok": true,
+        "data": {
+          "valid": false,
+          "issues": [
+            "到达示例小吃店前的交通时间不足",
+            "预算超出：每人 27 元 > 20 元"
+          ],
+          "schedule": [
+            {
+              "place_id": "p01",
+              "name": "示例湖畔公园",
+              "start": "10:00",
+              "end": "11:30",
+              "price_per_person": 0,
+              "route_from_previous": null
+            },
+            {
+              "place_id": "f04",
+              "name": "示例小吃店",
+              "start": "11:30",
+              "end": "12:15",
+              "price_per_person": 25,
+              "route_from_previous": {
+                "from_id": "p01",
+                "to_id": "f04",
+                "minutes": 15,
+                "fare_per_person": 2,
+                "data_mode": "fictional_demo",
+                "method": "fictional_grid_estimate"
+              }
+            }
+          ],
+          "cost_per_person": 27.0,
+          "group_size": 2,
+          "total_group_cost": 54.0,
+          "budget_per_person": 20,
+          "data_mode": "fictional_demo",
+          "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+        }
+      }
+    },
+    {
+      "kind": "final_validation",
+      "plan": {
+        "status": "no_plan",
+        "checked": null,
+        "citations": [
+          {
+            "id": "g_food",
+            "title": "美食与午餐",
+            "text": "虚构教学建议：美食兴趣可以匹配面馆、家常菜馆、咖啡馆和小吃店。地点名称只是教学示例，不是真实店铺推荐。要求用餐时必须安排至少一个 food 类地点，价格和访问时长来自教学地点表。",
+            "updated_at": "2026-10-03",
+            "source": "本项目自编虚构教学资料",
+            "score": 2.0831
+          },
+          {
+            "id": "g_budget",
+            "title": "预算与费用口径",
+            "text": "虚构教学建议：每人预算应包含地点价格以及相邻地点交通费。全组费用等于每人费用乘人数。购物、往返起点交通与额外消费不在本项目估算范围中，不能据此承诺实际旅行总价。",
+            "updated_at": "2026-10-03",
+            "source": "本项目自编虚构教学资料",
+            "score": 1.3753
+          },
+          {
+            "id": "g_unknown",
+            "title": "信息不足与不确定性",
+            "text": "虚构教学建议：缺少真实票价、地址或营业时间时，应说明信息不足，不能凭空补充。算法没有找到方案不等于数学上证明不存在方案。遇到时间短、预算低，可以建议放宽条件再试。",
+            "updated_at": "2026-10-03",
+            "source": "本项目自编虚构教学资料",
+            "score": 1.0051
+          }
+        ]
+      }
+    },
+    {
+      "kind": "answer",
+      "content": "周末去哪玩 · 全部为虚构教学数据\n本轮未找到通过校验的候选方案；这不证明不存在可行方案。可以放宽预算、时间或用餐要求后再试。\n检索参考：[g_food] 美食与午餐、[g_budget] 预算与费用口径、[g_unknown] 信息不足与不确定性"
+    }
+  ],
+  "provider_calls": 8,
+  "tool_calls": 18,
+  "duration_seconds": 13.505,
+  "last_check": null,
+  "plan": {
+    "status": "no_plan",
+    "checked": null,
+    "citations": [
+      {
+        "id": "g_food",
+        "title": "美食与午餐",
+        "text": "虚构教学建议：美食兴趣可以匹配面馆、家常菜馆、咖啡馆和小吃店。地点名称只是教学示例，不是真实店铺推荐。要求用餐时必须安排至少一个 food 类地点，价格和访问时长来自教学地点表。",
+        "updated_at": "2026-10-03",
+        "source": "本项目自编虚构教学资料",
+        "score": 2.0831
+      },
+      {
+        "id": "g_budget",
+        "title": "预算与费用口径",
+        "text": "虚构教学建议：每人预算应包含地点价格以及相邻地点交通费。全组费用等于每人费用乘人数。购物、往返起点交通与额外消费不在本项目估算范围中，不能据此承诺实际旅行总价。",
+        "updated_at": "2026-10-03",
+        "source": "本项目自编虚构教学资料",
+        "score": 1.3753
+      },
+      {
+        "id": "g_unknown",
+        "title": "信息不足与不确定性",
+        "text": "虚构教学建议：缺少真实票价、地址或营业时间时，应说明信息不足，不能凭空补充。算法没有找到方案不等于数学上证明不存在方案。遇到时间短、预算低，可以建议放宽条件再试。",
+        "updated_at": "2026-10-03",
+        "source": "本项目自编虚构教学资料",
+        "score": 1.0051
+      }
+    ]
+  },
+  "final_checks": 1,
+  "input_tokens": 35117,
+  "output_tokens": 1994,
+  "http_attempts": 8,
+  "mode": "live",
+  "data_mode": "fictional_demo",
+  "model_calls": 8,
+  "model": "deepseek-flash",
+  "prompt_version": "v0.3.0",
+  "session_id": "f70a8d72dc3d45bdad485bba311ea810",
+  "request": {
+    "city": "杭州",
+    "travel_date": "2026-11-21",
+    "budget_per_person": 20.0,
+    "group_size": 2,
+    "tags": [
+      "拍照",
+      "美食"
+    ],
+    "indoor": null,
+    "rain": false,
+    "start_time": "10:00",
+    "end_time": "18:00",
+    "include_meal": true
+  },
+  "context_messages": 1
+}

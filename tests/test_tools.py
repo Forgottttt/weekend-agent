@@ -56,6 +56,24 @@ class ToolTests(unittest.TestCase):
     def test_empty_plan_is_not_valid(self):
         self.assertFalse(self.check([])["data"]["valid"])
 
+    def test_meal_requirement_rejects_activity_only_plan(self):
+        # 回归：用餐要求必须与雨天一样由应用注入后交给 check_itinerary 判定。
+        # 否则工具会给出「假绿灯」，模型要到终审才被拒绝，白烧若干轮。
+        with_meal = ToolRegistry(TripTools(include_meal=True))
+        result = self.check([{"place_id": "p01", "start": "10:00"}], registry=with_meal)
+        self.assertFalse(result["data"]["valid"])
+        self.assertTrue(any("用餐" in issue for issue in result["data"]["issues"]))
+
+    def test_meal_requirement_cannot_be_widened_by_tool_arguments(self):
+        # 用户级约束不是工具参数：模型传 include_meal 只会被 Schema 拒绝，
+        # 因此无法把「要求用餐」放宽成「不用用餐」。
+        result = self.registry.execute("check_itinerary", {
+            "stops": [{"place_id": "p01", "start": "10:00"}], "budget_per_person": 200,
+            "group_size": 2, "start_time": "10:00", "end_time": "18:00", "include_meal": False,
+        })
+        self.assertFalse(result["ok"])
+        self.assertIn("未知字段", result["error"])
+
     def test_unknown_and_bad_arguments_do_not_execute(self):
         self.assertFalse(self.registry.execute("run_python", {})["ok"])
         self.assertFalse(self.registry.execute("get_weather", {"city": "杭州"})["ok"])

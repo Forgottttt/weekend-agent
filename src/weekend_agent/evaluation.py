@@ -23,7 +23,7 @@ def evaluate(mode: str = "demo", output_dir: Path | None = None) -> dict:
             fixed = {"status": "planned", "stops": [{"place_id": "p01", "start": "10:00"},
                      {"place_id": "f01", "start": "12:00"}, {"place_id": "p10", "start": "14:00"}],
                      "guide_ids": []}
-            tools = TripTools(rain=request.rain)
+            tools = TripTools(rain=request.rain, include_meal=request.include_meal)
             try:
                 verify_final(json.dumps(fixed), request, ToolRegistry(tools), set(tools.places), {})
                 baseline_valid = True

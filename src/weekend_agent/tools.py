@@ -30,10 +30,13 @@ def format_time(minutes: int) -> str:
 class TripTools:
     """读入一个地点库，提供天气、搜索、路程和行程检查。"""
 
-    def __init__(self, data_file: Path = DATA_FILE, rain: bool = False):
+    def __init__(self, data_file: Path = DATA_FILE, rain: bool = False,
+                 include_meal: bool = False):
         self.data = json.loads(data_file.read_text(encoding="utf-8"))
         self.places = {place["id"]: place for place in self.data["places"]}
         self.rain = rain
+        # 与 rain 同理：用户级约束在构造时注入，模型无法通过工具参数把它放宽。
+        self.include_meal = include_meal
 
     def _check_city(self, city: str) -> None:
         if city != self.data["city"]:
@@ -90,7 +93,11 @@ class TripTools:
 
     def check_itinerary(self, stops: list[dict], budget_per_person: float,
                         group_size: int, start_time: str, end_time: str) -> dict:
-        """计算金钱和时间，并给出可供模型读取的具体冲突。"""
+        """计算金钱和时间，并给出可供模型读取的具体冲突。
+
+        用餐要求与教学天气一样来自用户条件、由构造参数注入，
+        因此这里的判定与 finalize.verify_final 的终审口径一致。
+        """
         window_start, window_end = to_minutes(start_time), to_minutes(end_time)
         if window_start >= window_end:
             raise ValueError("当前只支持同一天且开始时间早于结束时间的行程")
@@ -99,6 +106,7 @@ class TripTools:
         cost = 0.0
         previous_id, previous_end = None, window_start
         seen: set[str] = set()
+        has_food = False
         if not stops:
             issues.append("行程至少需要一个地点")
         for stop in stops:
@@ -121,12 +129,15 @@ class TripTools:
             if self.rain and not place["indoor"]:
                 issues.append(f"教学天气为雨，{place['name']}属于户外地点")
             cost += place["price_per_person"]
+            has_food = has_food or place["category"] == "food"
             schedule.append({
                 "place_id": place["id"], "name": place["name"],
                 "start": format_time(arrival), "end": format_time(finish),
                 "price_per_person": place["price_per_person"], "route_from_previous": route,
             })
             previous_id, previous_end = place["id"], finish
+        if self.include_meal and not has_food:
+            issues.append("用户要求用餐，但行程中没有用餐地点")
         if cost > budget_per_person:
             issues.append(f"预算超出：每人 {cost:g} 元 > {budget_per_person:g} 元")
         return {
@@ -162,7 +173,7 @@ TOOL_SCHEMAS = [
     function_schema("get_route", "根据地点 ID 获取教学交通时间与每人费用，不是真实导航。", {
         "from_id": field("string"), "to_id": field("string"),
     }),
-    function_schema("check_itinerary", "检查行程的预算、营业时间、交通衔接、天气与重复地点；必须在输出方案前使用。", {
+    function_schema("check_itinerary", "检查行程的预算、营业时间、交通衔接、教学天气、重复地点与用餐要求；必须在输出方案前使用。天气和用餐要求由应用按用户条件注入，不能通过参数放宽。", {
         "stops": field("array", maxItems=8, items={"type": "object", "properties": {
             "place_id": field("string"), "start": field("string", description="HH:MM"),
         }, "required": ["place_id", "start"], "additionalProperties": False}),

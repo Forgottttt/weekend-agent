@@ -1,0 +1,826 @@
+{
+  "mode": "demo",
+  "dataset": "eval_cases_v1_12",
+  "case_count": 12,
+  "passed": 12,
+  "planned_count": 11,
+  "validated_plan_count": 11,
+  "baseline_valid_count": 3,
+  "model_calls": 0,
+  "http_attempts": 0,
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "median_seconds": 0.001,
+  "limitations": "开发期小型回归集；基线较弱；demo不代表模型能力；计数包含失败任务，usage仅含已收到的响应，丢失响应可能仍计费；未做盲测或用户研究。",
+  "cases": [
+    {
+      "id": "sunny",
+      "expected": "planned",
+      "actual": "planned",
+      "pass": true,
+      "baseline_valid": true,
+      "duration_seconds": 0.002,
+      "provider_calls": 6,
+      "tool_calls": 8,
+      "model_calls": 0,
+      "http_attempts": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "checked": {
+        "valid": true,
+        "issues": [],
+        "schedule": [
+          {
+            "place_id": "p03",
+            "name": "示例河边步道",
+            "start": "10:00",
+            "end": "11:00",
+            "price_per_person": 0,
+            "route_from_previous": null
+          },
+          {
+            "place_id": "f03",
+            "name": "示例咖啡馆",
+            "start": "11:05",
+            "end": "12:05",
+            "price_per_person": 45,
+            "route_from_previous": {
+              "from_id": "p03",
+              "to_id": "f03",
+              "minutes": 5,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p07",
+            "name": "示例历史街区",
+            "start": "12:20",
+            "end": "13:20",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "f03",
+              "to_id": "p07",
+              "minutes": 15,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p01",
+            "name": "示例湖畔公园",
+            "start": "13:35",
+            "end": "15:05",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p07",
+              "to_id": "p01",
+              "minutes": 15,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p08",
+            "name": "示例夜景广场",
+            "start": "17:00",
+            "end": "18:00",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p01",
+              "to_id": "p08",
+              "minutes": 25,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          }
+        ],
+        "cost_per_person": 53.0,
+        "group_size": 2,
+        "total_group_cost": 106.0,
+        "budget_per_person": 200,
+        "data_mode": "fictional_demo",
+        "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+      }
+    },
+    {
+      "id": "rainy",
+      "expected": "planned",
+      "actual": "planned",
+      "pass": true,
+      "baseline_valid": false,
+      "duration_seconds": 0.001,
+      "provider_calls": 6,
+      "tool_calls": 8,
+      "model_calls": 0,
+      "http_attempts": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "checked": {
+        "valid": true,
+        "issues": [],
+        "schedule": [
+          {
+            "place_id": "p09",
+            "name": "示例城市展览馆",
+            "start": "10:00",
+            "end": "11:30",
+            "price_per_person": 20,
+            "route_from_previous": null
+          },
+          {
+            "place_id": "f03",
+            "name": "示例咖啡馆",
+            "start": "11:55",
+            "end": "12:55",
+            "price_per_person": 45,
+            "route_from_previous": {
+              "from_id": "p09",
+              "to_id": "f03",
+              "minutes": 25,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p10",
+            "name": "示例摄影展",
+            "start": "13:00",
+            "end": "14:00",
+            "price_per_person": 40,
+            "route_from_previous": {
+              "from_id": "f03",
+              "to_id": "p10",
+              "minutes": 5,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "f04",
+            "name": "示例小吃店",
+            "start": "14:15",
+            "end": "15:00",
+            "price_per_person": 25,
+            "route_from_previous": {
+              "from_id": "p10",
+              "to_id": "f04",
+              "minutes": 15,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "f01",
+            "name": "示例面馆",
+            "start": "15:25",
+            "end": "16:25",
+            "price_per_person": 35,
+            "route_from_previous": {
+              "from_id": "f04",
+              "to_id": "f01",
+              "minutes": 25,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          }
+        ],
+        "cost_per_person": 173.0,
+        "group_size": 2,
+        "total_group_cost": 346.0,
+        "budget_per_person": 200,
+        "data_mode": "fictional_demo",
+        "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+      }
+    },
+    {
+      "id": "budget80",
+      "expected": "planned",
+      "actual": "planned",
+      "pass": true,
+      "baseline_valid": true,
+      "duration_seconds": 0.001,
+      "provider_calls": 6,
+      "tool_calls": 8,
+      "model_calls": 0,
+      "http_attempts": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "checked": {
+        "valid": true,
+        "issues": [],
+        "schedule": [
+          {
+            "place_id": "p03",
+            "name": "示例河边步道",
+            "start": "10:00",
+            "end": "11:00",
+            "price_per_person": 0,
+            "route_from_previous": null
+          },
+          {
+            "place_id": "f03",
+            "name": "示例咖啡馆",
+            "start": "11:05",
+            "end": "12:05",
+            "price_per_person": 45,
+            "route_from_previous": {
+              "from_id": "p03",
+              "to_id": "f03",
+              "minutes": 5,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p07",
+            "name": "示例历史街区",
+            "start": "12:20",
+            "end": "13:20",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "f03",
+              "to_id": "p07",
+              "minutes": 15,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p01",
+            "name": "示例湖畔公园",
+            "start": "13:35",
+            "end": "15:05",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p07",
+              "to_id": "p01",
+              "minutes": 15,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p08",
+            "name": "示例夜景广场",
+            "start": "17:00",
+            "end": "18:00",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p01",
+              "to_id": "p08",
+              "minutes": 25,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          }
+        ],
+        "cost_per_person": 53.0,
+        "group_size": 2,
+        "total_group_cost": 106.0,
+        "budget_per_person": 80,
+        "data_mode": "fictional_demo",
+        "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+      }
+    },
+    {
+      "id": "meal_under25",
+      "expected": "no_plan",
+      "actual": "no_plan",
+      "pass": true,
+      "baseline_valid": false,
+      "duration_seconds": 0.001,
+      "provider_calls": 5,
+      "tool_calls": 4,
+      "model_calls": 0,
+      "http_attempts": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "checked": null
+    },
+    {
+      "id": "without_meal",
+      "expected": "planned",
+      "actual": "planned",
+      "pass": true,
+      "baseline_valid": false,
+      "duration_seconds": 0.001,
+      "provider_calls": 6,
+      "tool_calls": 7,
+      "model_calls": 0,
+      "http_attempts": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "checked": {
+        "valid": true,
+        "issues": [],
+        "schedule": [
+          {
+            "place_id": "p03",
+            "name": "示例河边步道",
+            "start": "10:00",
+            "end": "11:00",
+            "price_per_person": 0,
+            "route_from_previous": null
+          },
+          {
+            "place_id": "p07",
+            "name": "示例历史街区",
+            "start": "11:15",
+            "end": "12:15",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p03",
+              "to_id": "p07",
+              "minutes": 15,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p01",
+            "name": "示例湖畔公园",
+            "start": "12:30",
+            "end": "14:00",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p07",
+              "to_id": "p01",
+              "minutes": 15,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p08",
+            "name": "示例夜景广场",
+            "start": "17:00",
+            "end": "18:00",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p01",
+              "to_id": "p08",
+              "minutes": 25,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          }
+        ],
+        "cost_per_person": 6.0,
+        "group_size": 2,
+        "total_group_cost": 12.0,
+        "budget_per_person": 20,
+        "data_mode": "fictional_demo",
+        "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+      }
+    },
+    {
+      "id": "five_people",
+      "expected": "planned",
+      "actual": "planned",
+      "pass": true,
+      "baseline_valid": true,
+      "duration_seconds": 0.001,
+      "provider_calls": 6,
+      "tool_calls": 8,
+      "model_calls": 0,
+      "http_attempts": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "checked": {
+        "valid": true,
+        "issues": [],
+        "schedule": [
+          {
+            "place_id": "p03",
+            "name": "示例河边步道",
+            "start": "10:00",
+            "end": "11:00",
+            "price_per_person": 0,
+            "route_from_previous": null
+          },
+          {
+            "place_id": "f03",
+            "name": "示例咖啡馆",
+            "start": "11:05",
+            "end": "12:05",
+            "price_per_person": 45,
+            "route_from_previous": {
+              "from_id": "p03",
+              "to_id": "f03",
+              "minutes": 5,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p07",
+            "name": "示例历史街区",
+            "start": "12:20",
+            "end": "13:20",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "f03",
+              "to_id": "p07",
+              "minutes": 15,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p01",
+            "name": "示例湖畔公园",
+            "start": "13:35",
+            "end": "15:05",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p07",
+              "to_id": "p01",
+              "minutes": 15,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p08",
+            "name": "示例夜景广场",
+            "start": "17:00",
+            "end": "18:00",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p01",
+              "to_id": "p08",
+              "minutes": 25,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          }
+        ],
+        "cost_per_person": 53.0,
+        "group_size": 5,
+        "total_group_cost": 265.0,
+        "budget_per_person": 200,
+        "data_mode": "fictional_demo",
+        "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+      }
+    },
+    {
+      "id": "afternoon",
+      "expected": "planned",
+      "actual": "planned",
+      "pass": true,
+      "baseline_valid": false,
+      "duration_seconds": 0.001,
+      "provider_calls": 6,
+      "tool_calls": 7,
+      "model_calls": 0,
+      "http_attempts": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "checked": {
+        "valid": true,
+        "issues": [],
+        "schedule": [
+          {
+            "place_id": "f03",
+            "name": "示例咖啡馆",
+            "start": "12:00",
+            "end": "13:00",
+            "price_per_person": 45,
+            "route_from_previous": null
+          },
+          {
+            "place_id": "p03",
+            "name": "示例河边步道",
+            "start": "13:05",
+            "end": "14:05",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "f03",
+              "to_id": "p03",
+              "minutes": 5,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p07",
+            "name": "示例历史街区",
+            "start": "14:20",
+            "end": "15:20",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p03",
+              "to_id": "p07",
+              "minutes": 15,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p04",
+            "name": "示例露天市集",
+            "start": "15:45",
+            "end": "16:45",
+            "price_per_person": 15,
+            "route_from_previous": {
+              "from_id": "p07",
+              "to_id": "p04",
+              "minutes": 25,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          }
+        ],
+        "cost_per_person": 66.0,
+        "group_size": 2,
+        "total_group_cost": 132.0,
+        "budget_per_person": 200,
+        "data_mode": "fictional_demo",
+        "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+      }
+    },
+    {
+      "id": "one_hour_food",
+      "expected": "planned",
+      "actual": "planned",
+      "pass": true,
+      "baseline_valid": false,
+      "duration_seconds": 0.0,
+      "provider_calls": 5,
+      "tool_calls": 4,
+      "model_calls": 0,
+      "http_attempts": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "checked": {
+        "valid": true,
+        "issues": [],
+        "schedule": [
+          {
+            "place_id": "f04",
+            "name": "示例小吃店",
+            "start": "12:00",
+            "end": "12:45",
+            "price_per_person": 25,
+            "route_from_previous": null
+          }
+        ],
+        "cost_per_person": 25.0,
+        "group_size": 2,
+        "total_group_cost": 50.0,
+        "budget_per_person": 200,
+        "data_mode": "fictional_demo",
+        "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+      }
+    },
+    {
+      "id": "culture",
+      "expected": "planned",
+      "actual": "planned",
+      "pass": true,
+      "baseline_valid": false,
+      "duration_seconds": 0.001,
+      "provider_calls": 6,
+      "tool_calls": 6,
+      "model_calls": 0,
+      "http_attempts": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "checked": {
+        "valid": true,
+        "issues": [],
+        "schedule": [
+          {
+            "place_id": "p07",
+            "name": "示例历史街区",
+            "start": "10:00",
+            "end": "11:00",
+            "price_per_person": 0,
+            "route_from_previous": null
+          },
+          {
+            "place_id": "p11",
+            "name": "示例书店",
+            "start": "11:25",
+            "end": "12:25",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p07",
+              "to_id": "p11",
+              "minutes": 25,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p09",
+            "name": "示例城市展览馆",
+            "start": "12:40",
+            "end": "14:10",
+            "price_per_person": 20,
+            "route_from_previous": {
+              "from_id": "p11",
+              "to_id": "p09",
+              "minutes": 15,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          }
+        ],
+        "cost_per_person": 24.0,
+        "group_size": 2,
+        "total_group_cost": 48.0,
+        "budget_per_person": 200,
+        "data_mode": "fictional_demo",
+        "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+      }
+    },
+    {
+      "id": "art",
+      "expected": "planned",
+      "actual": "planned",
+      "pass": true,
+      "baseline_valid": false,
+      "duration_seconds": 0.0,
+      "provider_calls": 6,
+      "tool_calls": 5,
+      "model_calls": 0,
+      "http_attempts": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "checked": {
+        "valid": true,
+        "issues": [],
+        "schedule": [
+          {
+            "place_id": "p10",
+            "name": "示例摄影展",
+            "start": "10:00",
+            "end": "11:00",
+            "price_per_person": 40,
+            "route_from_previous": null
+          },
+          {
+            "place_id": "p13",
+            "name": "示例手作工坊",
+            "start": "11:25",
+            "end": "12:55",
+            "price_per_person": 80,
+            "route_from_previous": {
+              "from_id": "p10",
+              "to_id": "p13",
+              "minutes": 25,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          }
+        ],
+        "cost_per_person": 122.0,
+        "group_size": 2,
+        "total_group_cost": 244.0,
+        "budget_per_person": 200,
+        "data_mode": "fictional_demo",
+        "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+      }
+    },
+    {
+      "id": "outdoor",
+      "expected": "planned",
+      "actual": "planned",
+      "pass": true,
+      "baseline_valid": false,
+      "duration_seconds": 0.001,
+      "provider_calls": 6,
+      "tool_calls": 7,
+      "model_calls": 0,
+      "http_attempts": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "checked": {
+        "valid": true,
+        "issues": [],
+        "schedule": [
+          {
+            "place_id": "p03",
+            "name": "示例河边步道",
+            "start": "10:00",
+            "end": "11:00",
+            "price_per_person": 0,
+            "route_from_previous": null
+          },
+          {
+            "place_id": "p07",
+            "name": "示例历史街区",
+            "start": "11:15",
+            "end": "12:15",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p03",
+              "to_id": "p07",
+              "minutes": 15,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p01",
+            "name": "示例湖畔公园",
+            "start": "12:30",
+            "end": "14:00",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p07",
+              "to_id": "p01",
+              "minutes": 15,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          },
+          {
+            "place_id": "p08",
+            "name": "示例夜景广场",
+            "start": "17:00",
+            "end": "18:00",
+            "price_per_person": 0,
+            "route_from_previous": {
+              "from_id": "p01",
+              "to_id": "p08",
+              "minutes": 25,
+              "fare_per_person": 2,
+              "data_mode": "fictional_demo",
+              "method": "fictional_grid_estimate"
+            }
+          }
+        ],
+        "cost_per_person": 6.0,
+        "group_size": 2,
+        "total_group_cost": 12.0,
+        "budget_per_person": 200,
+        "data_mode": "fictional_demo",
+        "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+      }
+    },
+    {
+      "id": "zero_budget",
+      "expected": "planned",
+      "actual": "planned",
+      "pass": true,
+      "baseline_valid": false,
+      "duration_seconds": 0.0,
+      "provider_calls": 5,
+      "tool_calls": 4,
+      "model_calls": 0,
+      "http_attempts": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "checked": {
+        "valid": true,
+        "issues": [],
+        "schedule": [
+          {
+            "place_id": "p03",
+            "name": "示例河边步道",
+            "start": "10:00",
+            "end": "11:00",
+            "price_per_person": 0,
+            "route_from_previous": null
+          }
+        ],
+        "cost_per_person": 0.0,
+        "group_size": 2,
+        "total_group_cost": 0.0,
+        "budget_per_person": 0,
+        "data_mode": "fictional_demo",
+        "cost_scope": "仅含地点价格和相邻地点交通费，不含往返起点交通及其他消费。"
+      }
+    }
+  ]
+}

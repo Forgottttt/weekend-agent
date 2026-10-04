@@ -55,7 +55,7 @@ class PlanningService:
             if saved["mode"] != mode:
                 raise ValueError("切换运行模式时请新建会话")
             request = TripRequest.from_dict({**saved["request"], **values})
-            tools = TripTools(rain=request.rain)
+            tools = TripTools(rain=request.rain, include_meal=request.include_meal)
             provider = APIProvider(ModelConfig.from_env()) if mode == "live" else DayDemoProvider(request, tools)
             agent = TripAgent(provider, ToolRegistry(tools), max_rounds=12, max_tool_calls=20)
             prior = saved["messages"]

@@ -8,7 +8,9 @@ from urllib.parse import urlsplit
 DATA_FILE = Path(__file__).resolve().parent / "data" / "hangzhou_demo.json"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ENV_KEYS = {"LLM_API_KEY", "DEEPSEEK_API_KEY", "LLM_BASE_URL", "LLM_MODEL",
-            "LLM_TIMEOUT_SECONDS", "LLM_MAX_TOKENS", "LLM_MAX_RETRIES"}
+            "LLM_TIMEOUT_SECONDS", "LLM_MAX_TOKENS", "LLM_MAX_RETRIES",
+            # 可选的向量化配置：不填就自动降级回词法检索（DeepSeek 没有 embedding 接口）。
+            "EMBED_BASE_URL", "EMBED_API_KEY", "EMBED_MODEL", "EMBED_TIMEOUT_SECONDS"}
 
 
 def read_env_file(path: Path) -> dict[str, str]:
@@ -88,3 +90,49 @@ class ModelConfig:
             max_tokens=integer("LLM_MAX_TOKENS", 4096),
             max_retries=integer("LLM_MAX_RETRIES", 1),
         )
+
+
+@dataclass(frozen=True)
+class EmbeddingConfig:
+    """可选的向量化配置。
+
+    与 ModelConfig 的关键差别：**缺失不算错误**。DeepSeek 没有 embedding 接口，
+    因此没有这份配置是常态，调用方应当据此降级回词法检索，而不是报错。
+    """
+
+    api_key: str = field(repr=False)
+    base_url: str
+    model: str
+    timeout_seconds: int = 60
+
+    def __post_init__(self):
+        address = urlsplit(self.base_url)
+        if (address.scheme != "https" or not address.hostname or address.username
+                or address.password or address.query or address.fragment):
+            raise ValueError("EMBED_BASE_URL 必须是没有凭据、查询参数或片段的 HTTPS 基础地址")
+        if not self.model.strip() or any(c.isspace() for c in self.model):
+            raise ValueError("EMBED_MODEL 不能为空或包含空白")
+        if type(self.timeout_seconds) is not int or not 5 <= self.timeout_seconds <= 300:
+            raise ValueError("EMBED_TIMEOUT_SECONDS 必须是 5–300 的整数")
+
+    def public_info(self) -> dict:
+        return {"base_url": self.base_url, "model": self.model,
+                "key_configured": bool(self.api_key)}
+
+    @classmethod
+    def from_env(cls, env_file: Path | None = None,
+                 environ: dict | None = None) -> "EmbeddingConfig | None":
+        """配置齐全时返回配置对象；任何一项缺失都返回 None（表示降级）。"""
+        file_values = read_env_file(env_file if env_file is not None else PROJECT_ROOT / ".env")
+        environment = os.environ if environ is None else environ
+        values = {**file_values, **{k: v for k, v in environment.items() if k in ENV_KEYS}}
+        api_key = values.get("EMBED_API_KEY", "").strip()
+        base_url = values.get("EMBED_BASE_URL", "").strip().rstrip("/")
+        model = values.get("EMBED_MODEL", "").strip()
+        if not api_key or api_key == "replace_with_your_key" or not base_url or not model:
+            return None
+        try:
+            timeout = int(values.get("EMBED_TIMEOUT_SECONDS", 60))
+        except (TypeError, ValueError):
+            raise ValueError("EMBED_TIMEOUT_SECONDS 必须是整数") from None
+        return cls(api_key=api_key, base_url=base_url, model=model, timeout_seconds=timeout)

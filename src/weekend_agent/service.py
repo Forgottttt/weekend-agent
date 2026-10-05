@@ -5,7 +5,7 @@ from pathlib import Path
 from threading import BoundedSemaphore, Lock
 
 from .agent import TripAgent
-from .config import ModelConfig, PROJECT_ROOT
+from .config import EmbeddingConfig, ModelConfig, PROJECT_ROOT
 from .longterm import MemoryStore, summarize_history
 from .memory import SessionStore, select_context
 from .planning import DayDemoProvider
@@ -34,6 +34,21 @@ class PlanningService:
         self.slots = BoundedSemaphore(2)
         self.lock_guard = Lock()
         self.session_locks: dict[str, Lock] = {}
+
+    def _embedding_provider(self, mode: str):
+        """有向量化配置就构造后端，否则返回 None——检索会自动走词法。
+
+        刻意不让"缺配置"变成错误：DeepSeek 没有 embedding 接口，没有这份配置是常态。
+        离线演示模式一律不联网，因此也返回 None。
+        """
+        if mode != "live":
+            return None
+        config = EmbeddingConfig.from_env()
+        if config is None:
+            return None
+        from .embedding import ApiEmbeddingProvider
+        return ApiEmbeddingProvider(config.base_url, config.api_key, config.model,
+                                    config.timeout_seconds)
 
     def plan(self, values: dict, question: str = "请根据表单规划行程。",
              mode: str = "demo", session_id: str | None = None,
@@ -68,7 +83,8 @@ class PlanningService:
             if saved["mode"] != mode:
                 raise ValueError("切换运行模式时请新建会话")
             request = TripRequest.from_dict({**saved["request"], **values})
-            tools = TripTools(rain=request.rain, include_meal=request.include_meal)
+            tools = TripTools(rain=request.rain, include_meal=request.include_meal,
+                              embedding_provider=self._embedding_provider(mode))
             provider = APIProvider(ModelConfig.from_env()) if mode == "live" else DayDemoProvider(request, tools)
             # max_rounds 是主要的成本闸门；工具上限按实测的探索深度校准（12 轮内
             # 正常探索约 20–28 次调用），设得过紧会让正常规划被误判成失败。

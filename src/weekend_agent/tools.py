@@ -4,7 +4,7 @@ import json
 import math
 from datetime import date
 from pathlib import Path
-from threading import Lock
+from threading import RLock
 from typing import Any
 
 from .config import DATA_FILE
@@ -32,7 +32,8 @@ class TripTools:
     """读入一个地点库，提供天气、搜索、路程和行程检查。"""
 
     def __init__(self, data_file: Path = DATA_FILE, rain: bool = False,
-                 include_meal: bool = False, rerank_provider=None):
+                 include_meal: bool = False, rerank_provider=None,
+                 embedding_provider=None):
         self.data = json.loads(data_file.read_text(encoding="utf-8"))
         self.places = {place["id"]: place for place in self.data["places"]}
         self.rain = rain
@@ -42,8 +43,14 @@ class TripTools:
         # 代价是每次检索多一次模型调用（约 1 秒）。是否值得由调用方按场景决定。
         self.rerank_provider = rerank_provider
         self.rerank_hallucinated_ids: list[str] = []
+        # 向量后端是可选的：没有它就走纯词法检索；它中途失败也会自动降级。
+        # 注意：传入的后端必须建立在**同一批语料**上（默认即 data/guides.json），
+        # 否则文档向量数量与文档数量不匹配，会被自动降级——这是刻意设计成降级而非静默错配。
+        self.embedding_provider = embedding_provider
+        self.retrieval_degraded: str | None = None
         # 检索索引惰性构建；并发执行工具时用锁避免重复构建。
-        self._index_lock = Lock()
+        # 用可重入锁：构建混合索引时会间接调用同样要加锁的 _guide_index。
+        self._index_lock = RLock()
 
     def _check_city(self, city: str) -> None:
         if city != self.data["city"]:
@@ -106,29 +113,67 @@ class TripTools:
             "data_mode": "fictional_demo", "method": "fictional_grid_estimate",
         }
 
-    def search_guides(self, query: str, top_k: int) -> dict:
-        from .guard import SAFETY_HEADER, sanitize_documents
+    def _guide_index(self):
         from .retrieval import GuideIndex
         if not hasattr(self, "guide_index"):
             with self._index_lock:
                 if not hasattr(self, "guide_index"):
                     self.guide_index = GuideIndex()
-        documents = self.guide_index.search(query, top_k)
-        method = "bm25_character_bigrams"
+        return self.guide_index
+
+    def _hybrid_index(self):
+        """懒构建混合索引。构建失败由调用方负责降级。
+
+        先把文档取出来再进临界区：`_guide_index()` 自己也要加锁，
+        如果在持锁状态下调用它，非重入锁会直接死锁。
+        """
+        if not hasattr(self, "hybrid_index"):
+            documents = self._guide_index().documents
+            with self._index_lock:
+                if not hasattr(self, "hybrid_index"):
+                    from .hybrid import DenseIndex, HybridIndex
+                    from .retrieval import GuideIndex
+                    dense = DenseIndex(documents, self.embedding_provider)
+                    self.hybrid_index = HybridIndex(GuideIndex(documents=documents), dense)
+        return self.hybrid_index
+
+    def _retrieve(self, query: str, top_k: int) -> tuple[list[dict], str]:
+        """按当前可用能力选择检索路径。
+
+        向量后端缺失或调用失败时**自动降级**为词法检索。降级不静默：
+        原因记在 `retrieval_degraded` 并随工具结果返回，出问题能立刻看见。
+        """
+        if self.embedding_provider is not None:
+            try:
+                hits = self._hybrid_index().search(query, top_k, recall_k=10)
+                if hits:
+                    return hits, "hybrid_rrf(bm25+dense)"
+            except Exception as error:            # noqa: BLE001 - 降级要覆盖任何后端异常
+                self.retrieval_degraded = f"向量检索不可用，已降级为 BM25：{error}"
+                self.embedding_provider = None
+                self.hybrid_index = None
+        return self._guide_index().search(query, top_k), "bm25_character_bigrams"
+
+    def search_guides(self, query: str, top_k: int) -> dict:
+        from .guard import SAFETY_HEADER, sanitize_documents
+        documents, method = self._retrieve(query, top_k)
         if self.rerank_provider is not None:
             # 精排要看到比 top_k 更多的候选，否则只是在同样 5 条里换顺序。
             from .hybrid import LLMReranker
             reranker = LLMReranker(self.rerank_provider, strict=False)
-            wider = self.guide_index.rank(query)[:max(top_k * 2, 8)]
+            wider = self._guide_index().rank(query)[:max(top_k * 2, 8)]
             documents = reranker.rerank(query, wider)[:top_k]
             self.rerank_hallucinated_ids.extend(reranker.hallucinated_ids)
-            method = "bm25_character_bigrams+llm_rerank"
+            method = f"{method}+llm_rerank"
         # 检索内容是不可信的外部数据：加边界标记并做注入扫描，
         # 命中只作标记与统计，不改写正文（改写会破坏检索质量）。
         safe_documents, report = sanitize_documents(documents)
-        return {"documents": safe_documents, "retrieval_method": method,
-                "safety_header": SAFETY_HEADER, "guard_report": report,
-                "data_mode": "fictional_demo"}
+        result = {"documents": safe_documents, "retrieval_method": method,
+                  "safety_header": SAFETY_HEADER, "guard_report": report,
+                  "data_mode": "fictional_demo"}
+        if self.retrieval_degraded:
+            result["retrieval_degraded"] = self.retrieval_degraded
+        return result
 
     def check_itinerary(self, stops: list[dict], budget_per_person: float,
                         group_size: int, start_time: str, end_time: str) -> dict:

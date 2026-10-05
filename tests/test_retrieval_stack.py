@@ -10,6 +10,7 @@ from weekend_agent.chunking import ChunkedIndex, chunk_documents, chunk_text, sp
 from weekend_agent.embedding import ExpansionEmbedding, cosine
 from weekend_agent.hybrid import DenseIndex, HybridIndex, LLMReranker, reciprocal_rank_fusion
 from weekend_agent.retrieval import GuideIndex
+from weekend_agent.tools import ToolRegistry, TripTools
 
 DOCS = [
     {"id": "a1", "title": "雨天室内安排", "text": "下雨时优先选择室内展览馆。书店也是不错的选择。"},
@@ -188,3 +189,64 @@ class RerankerTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CorpusEmbedding:
+    """与语料等长的确定性假后端，用于验证「有/无/坏」三条检索路径。"""
+
+    name = "corpus"
+    def __init__(self, documents):
+        self.vectors = [[float(len(d["text"]) % 7), float(d["text"].count("雨"))]
+                        for d in documents]
+    def embed(self, texts):
+        return [[float(len(t) % 7), float(t.count("雨"))] for t in texts]
+    def document_vectors(self):
+        return self.vectors
+
+
+class BrokenEmbedding:
+    name = "broken"
+    def embed(self, texts):
+        raise RuntimeError("连接被拒绝")
+
+
+class RetrievalDegradationTests(unittest.TestCase):
+    """检索后端的自动降级：缺配置、后端故障、语料不匹配都必须降级而非报错。"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.corpus = GuideIndex().documents
+
+    def search(self, tools):
+        return ToolRegistry(tools).execute("search_guides", {"query": "雨天室内", "top_k": 2})
+
+    def test_without_backend_uses_lexical_only(self):
+        result = self.search(TripTools())
+        self.assertEqual(result["data"]["retrieval_method"], "bm25_character_bigrams")
+        self.assertNotIn("retrieval_degraded", result["data"])
+
+    def test_working_backend_switches_to_hybrid(self):
+        result = self.search(TripTools(embedding_provider=CorpusEmbedding(self.corpus)))
+        self.assertEqual(result["data"]["retrieval_method"], "hybrid_rrf(bm25+dense)")
+        self.assertNotIn("retrieval_degraded", result["data"])
+
+    def test_broken_backend_degrades_with_visible_reason(self):
+        result = self.search(TripTools(embedding_provider=BrokenEmbedding()))
+        self.assertEqual(result["data"]["retrieval_method"], "bm25_character_bigrams")
+        self.assertIn("已降级为 BM25", result["data"]["retrieval_degraded"])
+        # 降级后必须仍然拿得到结果，而不是整体失败。
+        self.assertTrue(result["data"]["documents"])
+
+    def test_mismatched_corpus_degrades_instead_of_misaligning(self):
+        result = self.search(TripTools(embedding_provider=CorpusEmbedding(self.corpus[:20])))
+        self.assertEqual(result["data"]["retrieval_method"], "bm25_character_bigrams")
+        self.assertIn("数量不一致", result["data"]["retrieval_degraded"])
+
+    def test_degradation_happens_once_and_is_remembered(self):
+        tools = TripTools(embedding_provider=BrokenEmbedding())
+        first = self.search(tools)
+        second = self.search(tools)
+        self.assertIn("已降级为 BM25", first["data"]["retrieval_degraded"])
+        # 第二次仍是同一原因，且不再重复尝试坏后端。
+        self.assertIn("已降级为 BM25", second["data"]["retrieval_degraded"])
+        self.assertIsNone(tools.embedding_provider)

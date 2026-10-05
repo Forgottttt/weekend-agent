@@ -65,6 +65,10 @@ class DayDemoProvider:
             query = " ".join(r.tags + ["预算", "雨天室内" if r.rain else "交通衔接"])
             calls = [tool_call("day_guides", "search_guides", {"query": query, "top_k": 3})]
         else:
+            if results[-1][0] == "submit_plan":
+                # 正常不会走到这里：离线规则提交的方案应当直接通过终审。
+                # 若被拒绝，说明规则流程与终审口径又出现分歧——宁可明确报错也不要空转。
+                raise RuntimeError("离线规则提交的方案被应用终审拒绝，说明两层校验口径不一致")
             candidate_result = next(value for name, value in results if name == "search_places")
             candidates = candidate_result.get("data", {}).get("places", [])
             # 规则规划直接使用本地纯函数；这些内部计算不算模型工具请求。
@@ -81,5 +85,7 @@ class DayDemoProvider:
                 valid = checked.get("ok") and checked["data"]["valid"]
                 final = {"status": "planned" if valid else "no_plan", "stops": stops if valid else [],
                          "guide_ids": [d["id"] for d in guides.get("data", {}).get("documents", [])]}
-                return {"role": "assistant", "content": json.dumps(final, ensure_ascii=False)}
+                # 与真实模型走同一条交付通道，下游校验逻辑完全一致。
+                return {"role": "assistant", "content": None,
+                        "tool_calls": [tool_call("day_submit", "submit_plan", final)]}
         return {"role": "assistant", "content": None, "tool_calls": calls}

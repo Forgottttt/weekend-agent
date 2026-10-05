@@ -66,12 +66,55 @@ def create_server(port: int = 8765, service: PlanningService | None = None):
             return {"slots": slots, "provided": provided, "missing": absent,
                     "question": clarification(absent)}
 
+        def stream_plan(self, body):
+            """以 SSE 推送规划进度，最后推送完整结果。
+
+            不发送 Content-Length：HTTP/1.0 下响应在写完后关闭连接，
+            前端用 fetch 的流式读取逐块解析。校验失败发生在发送响应头之前，
+            因此仍然能以正常 HTTP 错误返回。
+            """
+            session_id = body.get("session_id")
+            if session_id is not None and (not isinstance(session_id, str) or len(session_id) != 32):
+                raise ValueError("会话 ID 格式不正确")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.end_headers()
+            closed: list[bool] = []
+
+            def write_event(payload):
+                if closed:
+                    return
+                try:
+                    self.wfile.write(("data: " + json.dumps(payload, ensure_ascii=False,
+                                                            allow_nan=False) + "\n\n").encode("utf-8"))
+                    self.wfile.flush()
+                except OSError:
+                    # 客户端断开：停止写入，本轮计算自然结束。
+                    closed.append(True)
+
+            try:
+                result = service.plan(body.get("request", {}),
+                                      body.get("question", "请根据表单规划行程。"),
+                                      body.get("mode", "demo"), session_id, on_event=write_event)
+            except (ValueError, TypeError, RuntimeError) as error:
+                write_event({"kind": "error", "error": str(error)})
+                write_event({"kind": "done"})
+                return
+            except Exception:
+                write_event({"kind": "error", "error": "服务内部错误，请查看本地测试并重试"})
+                write_event({"kind": "done"})
+                return
+            write_event({"kind": "result", "result": result})
+            write_event({"kind": "done"})
+
         def do_POST(self):
             origin = self.headers.get("Origin")
             allowed = {f"http://127.0.0.1:{self.server.server_port}", f"http://localhost:{self.server.server_port}"}
             if not self.valid_host() or (origin and origin not in allowed):
                 return self.send(403, {"error": "只允许本地同源请求"})
-            if self.path not in ("/api/plan", "/api/extract"):
+            if self.path not in ("/api/plan", "/api/plan/stream", "/api/extract"):
                 return self.send(404, {"error": "接口不存在"})
             try:
                 length = int(self.headers.get("Content-Length", "0"))
@@ -90,6 +133,8 @@ def create_server(port: int = 8765, service: PlanningService | None = None):
                     return self.send(200, self.extract(body))
                 if set(body) - {"request", "question", "mode", "session_id"}:
                     raise ValueError("请求字段不正确")
+                if self.path == "/api/plan/stream":
+                    return self.stream_plan(body)
                 session_id = body.get("session_id")
                 if session_id is not None and (not isinstance(session_id, str) or len(session_id) != 32):
                     raise ValueError("会话 ID 格式不正确")

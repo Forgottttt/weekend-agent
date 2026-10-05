@@ -9,7 +9,8 @@ import json
 import unittest
 
 from weekend_agent.extraction import (REQUIRED_SLOTS, clarification, extract_slots,
-                                      merge, missing_slots, provided_slots)
+                                      extract_until_complete, merge, missing_slots,
+                                      provided_slots)
 
 SLOT_NAMES = ("city", "travel_date", "budget_per_person", "group_size", "tags",
               "indoor", "rain", "start_time", "end_time", "include_meal")
@@ -99,6 +100,74 @@ class ExtractionTests(unittest.TestCase):
             slots_json(travel_date="2026-11-21", budget_per_person=200, group_size=2)))
         self.assertEqual(missing_slots(provided), [])
         self.assertIsNone(clarification([]))
+
+
+class ClarificationLoopTests(unittest.TestCase):
+    """多轮澄清：追问 → 把回答并回描述 → 重新抽取。"""
+
+    def test_loop_asks_until_required_slots_are_present(self):
+        replies = [slots_json(travel_date="2026-11-21", budget_per_person=150, include_meal=True),
+                   slots_json(travel_date="2026-11-21", budget_per_person=150,
+                              include_meal=True, group_size=3)]
+
+        class Sequenced:
+            def __init__(self): self.calls = 0
+            def complete(self, messages, tools):
+                self.calls += 1
+                return {"role": "assistant", "content": replies[min(self.calls - 1, len(replies) - 1)]}
+
+        prompts: list[str] = []
+        result = extract_until_complete("11月21号，人均150，中午要吃饭", Sequenced(),
+                                        ask=lambda question: prompts.append(question) or "三个人",
+                                        today="2026-10-04")
+        self.assertTrue(result.complete)
+        self.assertEqual(result.rounds, 1)
+        self.assertEqual(result.provided["group_size"], 3)
+        self.assertIn("同行人数", prompts[0])
+        # 用户的补充必须并回描述，让下一轮抽取看到完整上下文。
+        self.assertIn("补充说明：三个人", result.text)
+
+    def test_two_rounds_when_two_slots_are_missing(self):
+        replies = [slots_json(),
+                   slots_json(travel_date="2026-11-21", budget_per_person=150),
+                   slots_json(travel_date="2026-11-21", budget_per_person=150, group_size=2)]
+
+        class Sequenced:
+            def __init__(self): self.calls = 0
+            def complete(self, messages, tools):
+                self.calls += 1
+                return {"role": "assistant", "content": replies[min(self.calls - 1, len(replies) - 1)]}
+
+        answers = iter(["11月21号，预算150", "两个人"])
+        result = extract_until_complete("想出去玩", Sequenced(), ask=lambda q: next(answers),
+                                        today="2026-10-04")
+        self.assertTrue(result.complete)
+        self.assertEqual(result.rounds, 2)
+        self.assertEqual(result.provided["group_size"], 2)
+        self.assertIn("补充说明：两个人", result.text)
+        self.assertIn("补充说明：11月21号，预算150", result.text)
+
+    def test_without_ask_callback_it_returns_the_pending_question(self):
+        provider = ScriptedProvider(content=slots_json(budget_per_person=100))
+        result = extract_until_complete("预算100", provider, ask=None, today="2026-10-04")
+        self.assertFalse(result.complete)
+        self.assertEqual(result.asked, [])
+        self.assertIn("出行日期", result.pending)
+
+    def test_gives_up_after_max_rounds(self):
+        provider = ScriptedProvider(content=slots_json())
+        result = extract_until_complete("随便安排", provider, ask=lambda q: "还是不知道",
+                                        max_rounds=2, today="2026-10-04")
+        self.assertFalse(result.complete)
+        self.assertEqual(result.rounds, 2)
+        self.assertIsNotNone(result.pending)
+
+    def test_empty_answer_stops_the_loop(self):
+        provider = ScriptedProvider(content=slots_json(budget_per_person=100))
+        result = extract_until_complete("预算100", provider, ask=lambda q: "   ",
+                                        today="2026-10-04")
+        self.assertFalse(result.complete)
+        self.assertEqual(result.rounds, 1)
 
 
 if __name__ == "__main__":

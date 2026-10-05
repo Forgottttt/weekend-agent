@@ -10,6 +10,7 @@
 因此"LLM 提议、应用校验"这一条在这里同样成立，与 finalize 的终审是同一个哲学。
 """
 
+from dataclasses import dataclass, field
 from datetime import date
 
 from .jsonio import parse_json_object
@@ -131,3 +132,44 @@ def merge(base_values: dict, provided: dict) -> dict:
     merged = {**base_values, **provided}
     TripRequest.from_dict(merged)
     return merged
+
+
+@dataclass
+class ExtractionResult:
+    """多轮澄清的结果。"""
+
+    provided: dict
+    text: str                       # 累积后的完整描述（含用户每次补充）
+    asked: list[str] = field(default_factory=list)   # 已经问过并得到回答的问题
+    pending: str | None = None      # 仍缺条件时给出的问题
+    complete: bool = False
+
+    @property
+    def rounds(self) -> int:
+        return len(self.asked)
+
+
+def extract_until_complete(text: str, provider, ask=None,
+                           today: str | None = None, max_rounds: int = 3) -> ExtractionResult:
+    """反复「抽取 → 追问 → 把回答并回描述 → 再抽取」，直到关键槽位齐全。
+
+    每轮都把用户补充并进描述后重新抽取，而不是只解析补充部分——
+    这样模型始终看到完整上下文，不会因为丢失前文而给出互相矛盾的槽位。
+    `ask` 为 None 时不追问，只返回待确认的问题（用于非交互场景）。
+    """
+    accumulated = (text or "").strip()
+    asked: list[str] = []
+    for attempt in range(max_rounds + 1):
+        provided = provided_slots(extract_slots(accumulated, provider, today=today))
+        missing = missing_slots(provided)
+        if not missing:
+            return ExtractionResult(provided, accumulated, asked, None, True)
+        question = clarification(missing)
+        if ask is None or attempt >= max_rounds:
+            return ExtractionResult(provided, accumulated, asked, question, False)
+        asked.append(question)
+        answer = ask(question)
+        if answer is None or not str(answer).strip():
+            return ExtractionResult(provided, accumulated, asked, question, False)
+        accumulated = accumulated + "\n补充说明：" + str(answer).strip()
+    return ExtractionResult(provided, accumulated, asked, clarification(missing), False)

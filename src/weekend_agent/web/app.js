@@ -31,6 +31,42 @@ function fill(request, mode) {
   $('tags').value = request.tags.join('，'); $('rain').checked = request.rain; $('meal').checked = request.include_meal;
   $('indoor').value = request.indoor === null ? 'any' : request.indoor ? 'inside' : 'outside'; $('mode').value = mode;
 }
+function describeEvent(event) {
+  if (event.kind === 'phase' && event.phase === 'session') {
+    return `已建立会话 · ${event.mode === 'live' ? '真实模型 ' + event.model : '离线规则'}`;
+  }
+  if (event.kind === 'tool') return `${event.name} → ${event.result.ok ? '成功' : event.result.error}`;
+  if (event.kind === 'final_rejected') return `终审拒绝（${event.via}）：${event.error}`;
+  if (event.kind === 'final_via_text_fallback') return '注意：本轮走了文本兜底通道，而不是 submit_plan';
+  if (event.kind === 'final_validation') return '终审通过';
+  return null;
+}
+
+// 用 fetch 的流式读取消费 SSE：服务端每发生一件事就推一条 data: 行。
+async function planStream(payload, onEvent) {
+  const response = await fetch('/api/plan/stream', {method:'POST',
+    headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  if (!response.ok) {
+    const detail = await response.json().catch(() => ({}));
+    throw new Error(detail.error || '生成失败');
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  for (;;) {
+    const {done, value} = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, {stream: true});
+    let cut;
+    while ((cut = buffer.indexOf('\n\n')) >= 0) {
+      const chunk = buffer.slice(0, cut);
+      buffer = buffer.slice(cut + 2);
+      const line = chunk.split('\n').find(part => part.startsWith('data: '));
+      if (line) onEvent(JSON.parse(line.slice(6)));
+    }
+  }
+}
+
 $('trip-form').addEventListener('submit', async event => {
   event.preventDefault();
   const controls = [...$('trip-form').querySelectorAll('input,select,textarea,button')];
@@ -41,10 +77,22 @@ $('trip-form').addEventListener('submit', async event => {
     indoor:$('indoor').value === 'any' ? null : $('indoor').value === 'inside', rain:$('rain').checked,
     start_time:$('start').value, end_time:$('end').value, include_meal:$('meal').checked};
   try {
-    const response = await fetch('/api/plan', {method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({request, question:$('question').value.trim() || '请根据表单规划行程。', mode:$('mode').value, session_id:sessionId})});
-    const result = await response.json(); if (!response.ok) throw new Error(result.error || '生成失败');
-    sessionId = result.session_id; localStorage.setItem('weekend-session', sessionId); render(result);
+    $('trace').replaceChildren();
+    const progress = [];
+    let result = null, failure = null;
+    await planStream({request, question:$('question').value.trim() || '请根据表单规划行程。',
+                      mode:$('mode').value, session_id:sessionId}, payload => {
+      if (payload.kind === 'result') { result = payload.result; return; }
+      if (payload.kind === 'error') { failure = payload.error; return; }
+      const text = describeEvent(payload);
+      if (text) { progress.push(text); $('trace').append(textElement('p', text)); }
+    });
+    if (failure) throw new Error(failure);
+    if (!result) throw new Error('没有收到结果，请重试');
+    sessionId = result.session_id; localStorage.setItem('weekend-session', sessionId);
+    render(result);
+    // render 会清空 trace，这里把刚才的实时进度补回末尾。
+    for (const text of progress) $('trace').append(textElement('p', text));
     $('status').textContent = '安排已保存。修改条件后再生成可查看变化；刷新页面可以恢复最近一次结果。';
   } catch (error) { $('status').textContent = error.message; }
   finally { controls.forEach(control => { control.disabled = false; }); }
@@ -71,24 +119,46 @@ function applySlots(provided) {
   if (provided.indoor !== undefined) $('indoor').value = provided.indoor ? 'inside' : 'outside';
 }
 
+// 多轮澄清：把用户每次补充并进完整描述，后端每轮都看到全部上下文。
+let extractBase = '';
+const DEFAULT_PLACEHOLDER = $('question').placeholder;
+const SLOT_LABELS = {city:'城市', travel_date:'出行日期', budget_per_person:'每人预算',
+  group_size:'同行人数', tags:'兴趣', indoor:'室内外要求', rain:'是否雨天',
+  start_time:'开始时间', end_time:'结束时间', include_meal:'是否安排用餐'};
+
 $('extract').addEventListener('click', async () => {
-  const text = $('question').value.trim();
-  if (!text) { $('status').textContent = '请先在补充要求里写一句话，例如：两个人，预算200，11月21号，想拍照。'; return; }
+  const typed = $('question').value.trim();
+  if (!typed) {
+    $('status').textContent = extractBase
+      ? '请在上面输入你的补充。'
+      : '请先写一句话，例如：两个人，预算200，11月21号，想拍照。';
+    return;
+  }
   if ($('mode').value !== 'live') {
     $('status').textContent = '自然语言解析需要把运行方式切到「真实模型」；离线演示只按表单条件运行。';
     return;
   }
+  const payload = extractBase ? `${extractBase}\n补充说明：${typed}` : typed;
   const button = $('extract'); button.disabled = true;
-  $('status').textContent = '正在解析这句话……';
+  $('status').textContent = '正在解析……';
   try {
     const response = await fetch('/api/extract', {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({text, mode: $('mode').value})});
+      body: JSON.stringify({text: payload, mode: $('mode').value})});
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || '解析失败');
     applySlots(result.provided || {});
-    $('status').textContent = result.question
-      ? '已填入解析到的条件。' + result.question
-      : '已把解析到的条件填入表单。请核对后再生成安排；模型没提到的条件保持原样。';
+    if (result.question) {
+      // 还缺关键条件：记住累积文本，下次点击时把新输入当作补充。
+      extractBase = payload;
+      $('question').value = '';
+      $('question').placeholder = '请补充：' + (result.missing || []).map(n => SLOT_LABELS[n] || n).join('、');
+      $('status').textContent = '已填入能确定的条件。' + result.question;
+    } else {
+      extractBase = '';
+      $('question').value = payload;
+      $('question').placeholder = DEFAULT_PLACEHOLDER;
+      $('status').textContent = '已把解析到的条件填入表单。请核对后再生成安排；模型没提到的条件保持原样。';
+    }
   } catch (error) { $('status').textContent = error.message; }
   finally { button.disabled = false; }
 });

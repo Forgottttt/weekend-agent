@@ -2,20 +2,18 @@
 
 from .jsonio import parse_json_object
 from .request import TripRequest
-from .tools import ToolRegistry, validate_arguments
+from .tools import SUBMIT_PLAN_PARAMETERS, ToolRegistry, validate_arguments
 
 
-def verify_final(content: str, request: TripRequest, registry: ToolRegistry,
-                 place_ids: set[str], guides: dict[str, dict]) -> dict:
-    candidate = parse_json_object(content, "最终方案")
-    schema = {"type": "object", "properties": {
-        "status": {"type": "string"},
-        "stops": {"type": "array", "maxItems": 8, "items": {"type": "object", "properties": {
-            "place_id": {"type": "string"}, "start": {"type": "string"}},
-            "required": ["place_id", "start"], "additionalProperties": False}},
-        "guide_ids": {"type": "array", "maxItems": 5, "items": {"type": "string"}},
-    }, "required": ["status", "stops", "guide_ids"], "additionalProperties": False}
-    validate_arguments(candidate, schema, "final")
+def verify_plan(candidate: dict, request: TripRequest, registry: ToolRegistry,
+                place_ids: set[str], guides: dict[str, dict]) -> dict:
+    """校验一份**已经解析成字典**的最终方案。
+
+    `submit_plan` 工具调用的参数本身就是字典，因此这是主通道；
+    文本兜底路径会先用 jsonio.parse_json_object 解析再调用这里，
+    两条通道共用同一套判定，不存在第二份规则。
+    """
+    validate_arguments(candidate, SUBMIT_PLAN_PARAMETERS, "final")
     if candidate["status"] not in ("planned", "no_plan"):
         raise ValueError("final.status 必须是 planned 或 no_plan")
     if any(guide_id not in guides for guide_id in candidate["guide_ids"]):
@@ -47,6 +45,17 @@ def verify_final(content: str, request: TripRequest, registry: ToolRegistry,
     if not checked["data"]["valid"]:
         raise ValueError("；".join(checked["data"]["issues"]))
     return {"status": "planned", "checked": checked["data"], "citations": citations}
+
+
+def verify_final(content: str, request: TripRequest, registry: ToolRegistry,
+                 place_ids: set[str], guides: dict[str, dict]) -> dict:
+    """文本兜底通道：模型没有调用 submit_plan 时，从回复文本里解析出方案再校验。
+
+    保留这条通道是因为删掉它只会让偶发的格式问题变成硬失败；
+    是否被使用由 RunResult.submitted_via 记录，可以直接度量。
+    """
+    return verify_plan(parse_json_object(content, "最终方案"),
+                       request, registry, place_ids, guides)
 
 
 def render_plan(plan: dict) -> str:

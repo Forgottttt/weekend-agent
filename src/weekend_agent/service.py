@@ -33,7 +33,13 @@ class PlanningService:
         self.session_locks: dict[str, Lock] = {}
 
     def plan(self, values: dict, question: str = "请根据表单规划行程。",
-             mode: str = "demo", session_id: str | None = None) -> dict:
+             mode: str = "demo", session_id: str | None = None,
+             on_event=None) -> dict:
+        """生成一份方案。on_event 用于流式推送进度，不影响任何判定逻辑。"""
+        def notify(payload: dict) -> None:
+            if on_event is not None:
+                on_event(payload)
+
         if mode not in ("demo", "live"):
             raise ValueError("模式必须是 demo 或 live")
         if not isinstance(question, str) or not question.strip() or len(question) > 2000:
@@ -57,13 +63,17 @@ class PlanningService:
             request = TripRequest.from_dict({**saved["request"], **values})
             tools = TripTools(rain=request.rain, include_meal=request.include_meal)
             provider = APIProvider(ModelConfig.from_env()) if mode == "live" else DayDemoProvider(request, tools)
-            agent = TripAgent(provider, ToolRegistry(tools), max_rounds=12, max_tool_calls=20)
+            # max_rounds 是主要的成本闸门；工具上限按实测的探索深度校准（12 轮内
+            # 正常探索约 20–28 次调用），设得过紧会让正常规划被误判成失败。
+            agent = TripAgent(provider, ToolRegistry(tools), max_rounds=12, max_tool_calls=28)
+            notify({"kind": "phase", "phase": "session", "session_id": session_id, "mode": mode,
+                    "model": provider.config.model if mode == "live" else "offline-rule-v1"})
             prior = saved["messages"]
             if prior:
                 agent.messages = select_context(prior)
             retained = len(agent.messages)
             try:
-                run = agent.run(question, request)
+                run = agent.run(question, request, on_event=on_event)
             except RuntimeError as error:
                 usage = getattr(provider, "total_usage", {})
                 raise PlanningError(str(error), {
@@ -73,7 +83,10 @@ class PlanningService:
                     "input_tokens": usage.get("prompt_tokens", 0),
                     "output_tokens": usage.get("completion_tokens", 0),
                 }) from None
-            result = {**asdict(run), "mode": mode, "data_mode": "fictional_demo",
+            payload = asdict(run)
+            # 显式还原成普通列表：不依赖 asdict 对列表子类的重建行为。
+            payload["events"] = list(run.events)
+            result = {**payload, "mode": mode, "data_mode": "fictional_demo",
                       "model_calls": run.provider_calls if mode == "live" else 0,
                       "model": provider.config.model if mode == "live" else "offline-rule-v1",
                       "prompt_version": "v0.3.0",

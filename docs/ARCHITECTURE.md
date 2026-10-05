@@ -6,7 +6,8 @@
 
 ```mermaid
 flowchart TD
-    UI[网页或CLI] --> S[PlanningService]
+    UI[网页或CLI] --> X[extraction 槽位抽取]
+    X --> S[PlanningService]
     DB[(SQLite完整历史)] --> S
     S --> R[TripRequest权威约束]
     S --> C[选取近期完整回合]
@@ -18,7 +19,7 @@ flowchart TD
     D --> T[ToolRegistry检查并执行]
     L --> T
     T --> A
-    A --> V[最终结构与业务校验]
+    A -->|submit_plan 工具调用| V[最终结构与业务校验]
     R --> V
     V --> O[应用渲染费用与时间]
     O --> DB
@@ -30,16 +31,34 @@ flowchart TD
 | 模块 | 保存或处理什么 | 不应负责什么 |
 |---|---|---|
 | request.py | 用户表单的权威预算、人数、时间、兴趣 | 让模型自行放宽限制 |
-| tools.py | 五个工具、参数规则与业务校验 | 网页排版、模型HTTP |
+| extraction.py | 自由文本→槽位的候选值、缺失检测与追问 | 决定最终约束（仍由 request 校验） |
+| tools.py | 五个业务工具、submit_plan 控制工具、参数规则与业务校验 | 网页排版、模型HTTP |
 | retrieval.py | 中文字符二元组和BM25词法排序 | embedding训练或向量库 |
+| jsonio.py | 模型输出的容错JSON解析（围栏/前置解释/裸JSON） | 业务字段校验 |
 | providers.py | 模型接口和早期固定演示来源 | 业务预算计算 |
 | planning.py | 多站离线规则规划和工具请求模拟 | 自由文本理解或模型能力证明 |
-| agent.py | 消息循环、协议检查、调用上限 | 信任模型填写的最终价格 |
+| agent.py | 消息循环、协议检查、调用上限、终审通道 | 信任模型填写的最终价格 |
 | finalize.py | 来源ID、用户条件、最终费用校验与渲染 | 验证资料是否符合现实 |
 | memory.py | SQLite完整记录与近期上下文选择 | 跨会话语义长期记忆 |
 | service.py | 组装对象、恢复条件、会话锁与保存 | 修改模型内部参数 |
-| server.py / web/ | 本地HTTP与界面 | 公开账号系统或密钥存储 |
-| evaluation.py | 固定回归场景和弱基线 | 自动证明真实模型泛化 |
+| server.py / web/ | 本地HTTP、SSE进度流与界面 | 公开账号系统或密钥存储 |
+| evaluation.py | 固定回归、弱基线与修复轮统计 | 自动证明真实模型泛化 |
+| extraction_eval.py | 槽位准确率、幻觉误填率、追问正确率 | 证明通用抽取能力 |
+| retrieval_eval.py | BM25 与 TF-IDF 基线的 recall@k / MRR | 证明真实检索质量 |
+| citation_eval.py | 引用命中率与召回率（LLM-as-judge） | 严格语义蕴含判定 |
+
+## 为什么把最终交付做成 submit_plan 工具调用
+
+早期实现让模型把最终方案作为**普通文本**输出，应用再解析。真实评测显示这条路很脆：
+模型会把 JSON 包进 Markdown 围栏，或在 JSON 前面加一段解释文字，导致解析失败并多烧一轮完整上下文。
+
+改成工具调用后，`arguments` 由接口保证是合法 JSON，**格式问题在结构上就不存在了**。
+代价是循环的终止条件变了：不再是"模型不再调用工具"，而是"模型调用了 submit_plan"。
+文本解析通道保留为兜底（删掉它只会让偶发问题变成硬失败），是否被使用记录在
+`RunResult.submitted_via` 上，可以直接度量。
+
+一个容易踩的坑：提交成功后必须给同批次里所有 tool_call 补上配对结果，
+否则下一轮带着未配对的 `tool_calls` 会被接口直接拒绝。测试里有一条专门锁住这个行为。
 
 ## 为什么单Agent和标准库
 

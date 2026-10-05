@@ -1,0 +1,279 @@
+{
+  "dataset": "eval_cases_v1_12",
+  "case_count": 12,
+  "judged_count": 11,
+  "skipped_count": 1,
+  "error_count": 0,
+  "cited_total": 27,
+  "hit_total": 19,
+  "citation_precision": 0.7037,
+  "unrelated_citation_rate": 0.2963,
+  "citation_recall": 0.95,
+  "judge_model_calls": 11,
+  "limitations": "这是模型评审模型，评审自身有偏差；方案没有自由文本论证，因此测的是引用与方案主题的**相关性支持**，不是严格语义蕴含；样本仅 12 例，引用条数很少，比例类指标不稳定。",
+  "cases": [
+    {
+      "id": "sunny",
+      "expected": "planned",
+      "status": "judged",
+      "cited": [
+        "g_photo",
+        "g_food",
+        "d0137"
+      ],
+      "supporting": [
+        "g_food",
+        "g_photo",
+        "d0137"
+      ],
+      "hit": [
+        "g_photo",
+        "g_food",
+        "d0137"
+      ],
+      "unrelated": [],
+      "missed": [],
+      "reason": "方案包含咖啡馆用餐且多为拍照类活动，g_food支持美食与午餐安排、g_photo支持公园/历史街区/摄影展等拍照地点及摄影展室内属性、d0137支持上午两地点+中午用餐+下午看展的慢游结构。",
+      "retrieved_count": 5,
+      "duration_seconds": 15.609
+    },
+    {
+      "id": "rainy",
+      "expected": "planned",
+      "status": "judged",
+      "cited": [
+        "g_rain",
+        "g_food",
+        "d0133"
+      ],
+      "supporting": [
+        "g_rain",
+        "g_food"
+      ],
+      "hit": [
+        "g_rain",
+        "g_food"
+      ],
+      "unrelated": [
+        "d0133"
+      ],
+      "missed": [],
+      "reason": "g_rain 支持方案选择室内展览馆、摄影展等室内活动，g_food 支持方案安排面馆和咖啡馆等 food 类用餐地点；d0133 讲公交一日票与往返交通预算，与方案费用口径中不含往返起点交通不一致，故不纳入支持。",
+      "retrieved_count": 3,
+      "duration_seconds": 6.612
+    },
+    {
+      "id": "budget80",
+      "expected": "planned",
+      "status": "judged",
+      "cited": [
+        "g_food",
+        "g_photo",
+        "d0133"
+      ],
+      "supporting": [
+        "g_food",
+        "g_photo"
+      ],
+      "hit": [
+        "g_food",
+        "g_photo"
+      ],
+      "unrelated": [
+        "d0133"
+      ],
+      "missed": [],
+      "reason": "g_food 支持方案中的面馆用餐安排，g_photo 支持展览馆、历史街区和公园等拍照文化类活动及时间安排；d0133 只讲公交一日票且方案未采用，仅供参考不构成支持。",
+      "retrieved_count": 3,
+      "duration_seconds": 7.817
+    },
+    {
+      "id": "meal_under25",
+      "expected": "no_plan",
+      "skipped": "本轮没有可评审的方案",
+      "status": "no_plan"
+    },
+    {
+      "id": "without_meal",
+      "expected": "planned",
+      "status": "judged",
+      "cited": [
+        "g_photo",
+        "d0133"
+      ],
+      "supporting": [
+        "g_photo"
+      ],
+      "hit": [
+        "g_photo"
+      ],
+      "unrelated": [
+        "d0133"
+      ],
+      "missed": [],
+      "reason": "方案中的活动均为带拍照标签的公园、历史街区和夜景广场，g_photo 资料正好说明了拍照活动的地点类型、营业时间及夜景广场开放时段，直接支持该方案的活动选择。",
+      "retrieved_count": 3,
+      "duration_seconds": 12.695
+    },
+    {
+      "id": "five_people",
+      "expected": "planned",
+      "status": "judged",
+      "cited": [
+        "g_photo",
+        "g_food",
+        "d0137"
+      ],
+      "supporting": [
+        "g_food",
+        "d0177",
+        "g_photo",
+        "d0137"
+      ],
+      "hit": [
+        "g_photo",
+        "g_food",
+        "d0137"
+      ],
+      "unrelated": [],
+      "missed": [
+        "d0177"
+      ],
+      "reason": "g_food 支持咖啡馆用餐安排，d0177 支持交通衔接与时间留白，g_photo 支持拍照类地点与摄影展、夜景广场的时间约束，d0137 支持上午两地点、中午用餐、下午看展及费用口径；d0133 主讲公交一日票和往返交通，本方案不含相关选择，不算支持。",
+      "retrieved_count": 5,
+      "duration_seconds": 15.745
+    },
+    {
+      "id": "afternoon",
+      "expected": "planned",
+      "status": "judged",
+      "cited": [
+        "g_photo",
+        "g_food",
+        "d0137"
+      ],
+      "supporting": [
+        "g_food",
+        "g_photo",
+        "d0137"
+      ],
+      "hit": [
+        "g_photo",
+        "g_food",
+        "d0137"
+      ],
+      "unrelated": [],
+      "missed": [],
+      "reason": "g_food支持午餐面馆这类food类地点及价格时长口径，g_photo支持公园与摄影展等拍照活动及室内展安排，d0137支持上午户外、中午用餐、下午看展的三段式路线；其余资料仅讲公交票、夜骑或出现杭州等无关内容。",
+      "retrieved_count": 5,
+      "duration_seconds": 12.378
+    },
+    {
+      "id": "one_hour_food",
+      "expected": "planned",
+      "status": "judged",
+      "cited": [
+        "g_food"
+      ],
+      "supporting": [
+        "g_food"
+      ],
+      "hit": [
+        "g_food"
+      ],
+      "unrelated": [],
+      "missed": [],
+      "reason": "方案仅包含一个家常菜馆用餐地点，g_food 资料明确支持美食用餐安排（家常菜馆匹配与 food 类地点要求），其余资料与方案内容无关。",
+      "retrieved_count": 5,
+      "duration_seconds": 4.295
+    },
+    {
+      "id": "culture",
+      "expected": "planned",
+      "status": "judged",
+      "cited": [
+        "d0038",
+        "d0133"
+      ],
+      "supporting": [],
+      "hit": [],
+      "unrelated": [
+        "d0038",
+        "d0133"
+      ],
+      "missed": [],
+      "reason": "两份资料分别讲公交一日票和茶文化陈列室，均未涉及展览馆、书店、历史街区、用餐或方案的预算口径，与方案选择无实质支持关系。",
+      "retrieved_count": 2,
+      "duration_seconds": 7.792
+    },
+    {
+      "id": "art",
+      "expected": "planned",
+      "status": "judged",
+      "cited": [
+        "d0133",
+        "g_rain"
+      ],
+      "supporting": [
+        "g_rain"
+      ],
+      "hit": [
+        "g_rain"
+      ],
+      "unrelated": [
+        "d0133"
+      ],
+      "missed": [],
+      "reason": "方案安排了摄影展和手作工坊等室内活动，g_rain 资料明确支持雨天优先选择室内展览馆、摄影展等室内地点，与方案选择直接相关。",
+      "retrieved_count": 3,
+      "duration_seconds": 5.201
+    },
+    {
+      "id": "outdoor",
+      "expected": "planned",
+      "status": "judged",
+      "cited": [
+        "g_photo",
+        "g_food",
+        "d0133"
+      ],
+      "supporting": [
+        "g_food",
+        "g_photo"
+      ],
+      "hit": [
+        "g_photo",
+        "g_food"
+      ],
+      "unrelated": [
+        "d0133"
+      ],
+      "missed": [],
+      "reason": "g_food 支持方案中的用餐/美食地点与价格时长口径，g_photo 支持方案中的拍照类公园、历史街区等活动的选择与时间安排；d0133 仅泛泛讲一日票和预算，与方案不直接相关。",
+      "retrieved_count": 3,
+      "duration_seconds": 18.431
+    },
+    {
+      "id": "zero_budget",
+      "expected": "planned",
+      "status": "judged",
+      "cited": [
+        "g_food",
+        "g_photo"
+      ],
+      "supporting": [
+        "g_photo"
+      ],
+      "hit": [
+        "g_photo"
+      ],
+      "unrelated": [
+        "g_food"
+      ],
+      "missed": [],
+      "reason": "方案选择了带拍照标签的公园，资料g_photo正好说明拍照活动可选带拍照标签的公园，且该资料支持此选择。",
+      "retrieved_count": 5,
+      "duration_seconds": 7.898
+    }
+  ]
+}

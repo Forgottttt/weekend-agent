@@ -154,6 +154,76 @@ class ProtocolTests(unittest.TestCase):
         self.assertTrue(any(e["kind"] == "final_rejected" for e in run.events))
         self.assertIn("每人 25 元", run.answer)
 
+    def test_submit_plan_is_the_primary_channel(self):
+        class Scripted:
+            def complete(self, messages, schemas):
+                if any(m["role"] == "tool" for m in messages):
+                    return {"role": "assistant", "content": None, "tool_calls": [
+                        tool_call("submit", "submit_plan", {"status": "planned", "stops": [
+                            {"place_id": "f04", "start": "12:00"}], "guide_ids": []})]}
+                return {"role": "assistant", "content": None, "tool_calls": [
+                    tool_call("search", "search_places", {"city": "杭州", "tags": [],
+                                                          "indoor": None, "max_price": 100})]}
+        run = TripAgent(Scripted(), ToolRegistry(TripTools())).run("测试", TripRequest())
+        self.assertEqual(run.submitted_via, "submit_plan")
+        self.assertNotIn("final_via_text_fallback", [e["kind"] for e in run.events])
+        self.assertIn("每人 25 元", run.answer)
+
+    def test_text_answer_is_recorded_as_fallback(self):
+        class Scripted:
+            def complete(self, messages, schemas):
+                if any(m["role"] == "tool" for m in messages):
+                    return {"role": "assistant", "content": json.dumps(
+                        {"status": "planned", "stops": [{"place_id": "f04", "start": "12:00"}],
+                         "guide_ids": []})}
+                return {"role": "assistant", "content": None, "tool_calls": [
+                    tool_call("search", "search_places", {"city": "杭州", "tags": [],
+                                                          "indoor": None, "max_price": 100})]}
+        run = TripAgent(Scripted(), ToolRegistry(TripTools())).run("测试", TripRequest())
+        self.assertEqual(run.submitted_via, "text")
+        self.assertIn("final_via_text_fallback", [e["kind"] for e in run.events])
+
+    def test_rejected_submit_plan_returns_error_as_tool_result(self):
+        class Scripted:
+            def __init__(self): self.stage = 0
+            def complete(self, messages, schemas):
+                self.stage += 1
+                if self.stage == 1:
+                    return {"role": "assistant", "content": None, "tool_calls": [
+                        tool_call("search", "search_places", {"city": "杭州", "tags": [],
+                                                              "indoor": None, "max_price": 100})]}
+                place = "f01" if self.stage == 2 else "f04"
+                return {"role": "assistant", "content": None, "tool_calls": [
+                    tool_call("submit", "submit_plan", {"status": "planned", "stops": [
+                        {"place_id": place, "start": "12:00"}], "guide_ids": []})]}
+        run = TripAgent(Scripted(), ToolRegistry(TripTools())).run(
+            "测试", TripRequest.from_dict({"budget_per_person": 30}))
+        self.assertEqual(run.submitted_via, "submit_plan")
+        self.assertEqual(run.final_checks, 2)
+        rejected = [e for e in run.events if e["kind"] == "final_rejected"]
+        self.assertEqual(rejected[0]["via"], "submit_plan")
+        self.assertIn("预算超出", rejected[0]["error"])
+        self.assertIn("每人 25 元", run.answer)
+
+    def test_successful_submit_answers_every_pending_tool_call(self):
+        # 回归：提交成功时若同批次还有别的调用，必须逐个补上配对结果。
+        # 漏掉任何一个，下一轮都会带着未配对的 tool_calls，接口会直接拒绝。
+        class Scripted:
+            def complete(self, messages, schemas):
+                return {"role": "assistant", "content": None, "tool_calls": [
+                    tool_call("search", "search_places", {"city": "杭州", "tags": [],
+                                                          "indoor": None, "max_price": 100}),
+                    tool_call("submit", "submit_plan", {"status": "planned", "stops": [
+                        {"place_id": "f04", "start": "12:00"}], "guide_ids": []}),
+                    tool_call("weather", "get_weather", {"city": "杭州", "travel_date": "2026-11-21"})]}
+        agent = TripAgent(Scripted(), ToolRegistry(TripTools()))
+        run = agent.run("测试", TripRequest())
+        calls = [c["id"] for m in agent.messages for c in m.get("tool_calls", [])]
+        results = [m["tool_call_id"] for m in agent.messages if m["role"] == "tool"]
+        self.assertEqual(calls, results)
+        self.assertEqual(run.submitted_via, "submit_plan")
+        self.assertIn("weather", calls)
+
     def test_malformed_call_id_is_controlled_error(self):
         class Broken:
             def complete(self, messages, schemas):
@@ -214,6 +284,24 @@ class ServiceTests(unittest.TestCase):
         calls = [call["id"] for m in context for call in m.get("tool_calls", [])]
         results = [m["tool_call_id"] for m in context if m["role"] == "tool"]
         self.assertEqual(calls, results)
+
+    def test_plan_result_keeps_events_and_event_log_survives_asdict(self):
+        # 回归：事件日志是 list 子类，asdict 会用 type(obj)(生成器) 重建它。
+        # 早期版本因此把 events 变成空列表，静默丢掉全部调用记录。
+        from dataclasses import asdict, dataclass
+        from weekend_agent.agent import _EventLog
+
+        @dataclass
+        class Holder:
+            events: list
+
+        log = _EventLog()
+        log.append({"kind": "tool", "name": "get_weather"})
+        self.assertEqual(list(asdict(Holder(log))["events"]),
+                         [{"kind": "tool", "name": "get_weather"}])
+        result = self.service.plan({})
+        self.assertTrue(result["events"], "结果里的事件不应为空")
+        self.assertTrue(any(event["kind"] == "tool" for event in result["events"]))
 
     def test_optimistic_write_prevents_overwrite(self):
         store = SessionStore(self.path)
@@ -283,6 +371,27 @@ class HTTPTests(unittest.TestCase):
         with self.assertRaises(HTTPError) as error:
             self.post({"request": {}}, origin="https://example.invalid")
         self.assertEqual(error.exception.code, 403)
+        error.exception.close()
+
+    def test_stream_endpoint_emits_progress_then_result(self):
+        with self.post({"request": {"rain": True}}, path="/api/plan/stream") as response:
+            self.assertEqual(response.headers["Content-Type"], "text/event-stream; charset=utf-8")
+            raw = response.read().decode("utf-8")
+        payloads = [json.loads(line[6:]) for line in raw.splitlines() if line.startswith("data: ")]
+        kinds = [payload["kind"] for payload in payloads]
+        self.assertEqual(kinds[-1], "done")
+        self.assertIn("result", kinds)
+        # 进度必须先于结果推送，否则流式就没有意义。
+        self.assertLess(kinds.index("phase"), kinds.index("result"))
+        self.assertTrue(any(kind == "tool" for kind in kinds))
+        result = payloads[kinds.index("result")]["result"]
+        self.assertEqual(result["plan"]["status"], "planned")
+        self.assertTrue(result["request"]["rain"])
+
+    def test_stream_endpoint_rejects_bad_field_before_streaming(self):
+        with self.assertRaises(HTTPError) as error:
+            self.post({"request": {}, "boss": True}, path="/api/plan/stream")
+        self.assertEqual(error.exception.code, 400)
         error.exception.close()
 
     def test_extract_rejects_demo_mode_and_unknown_fields(self):

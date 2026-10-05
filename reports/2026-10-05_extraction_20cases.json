@@ -6,12 +6,12 @@
   "slot_accuracy": 0.9595,
   "stated_slots": 74,
   "correct_slots": 71,
-  "hallucination_rate": 0.0317,
+  "hallucination_rate": 0.0159,
   "unstated_slots": 126,
-  "hallucinated_slots": 4,
-  "clarification_accuracy": 0.95,
-  "clarification_correct_cases": 19,
-  "median_seconds": 1.071,
+  "hallucinated_slots": 2,
+  "clarification_accuracy": 1.0,
+  "clarification_correct_cases": 20,
+  "median_seconds": 0.923,
   "limitations": "20 例小样本，标签由本仓库作者人工标注，标注口径以「用户明确说到」为准，兴趣标签的归类存在判断余地；因此这些数字反映的是本项目抽取口径下的相对表现，不是通用抽取能力评测。",
   "cases": [
     {
@@ -22,7 +22,6 @@
       "provided": {
         "travel_date": "2026-10-10",
         "budget_per_person": 150,
-        "group_size": 3,
         "tags": [
           "散步"
         ],
@@ -32,14 +31,13 @@
       "wrong": 0,
       "wrong_slots": [],
       "hallucinated": [
-        "group_size",
         "tags"
       ],
       "expect_clarification": true,
-      "asked_clarification": false,
-      "clarification_correct": false,
-      "question": null,
-      "duration_seconds": 1.083
+      "asked_clarification": true,
+      "clarification_correct": true,
+      "question": "还需要你确认：同行人数。补充之后我再生成安排。",
+      "duration_seconds": 1.437
     },
     {
       "id": "e02",
@@ -64,7 +62,7 @@
       "asked_clarification": false,
       "clarification_correct": true,
       "question": null,
-      "duration_seconds": 0.897
+      "duration_seconds": 1.271
     },
     {
       "id": "e03",
@@ -84,7 +82,7 @@
       "asked_clarification": true,
       "clarification_correct": true,
       "question": "还需要你确认：每人预算、同行人数。补充之后我再生成安排。",
-      "duration_seconds": 1.284
+      "duration_seconds": 1.103
     },
     {
       "id": "e04",
@@ -109,7 +107,7 @@
       "asked_clarification": true,
       "clarification_correct": true,
       "question": "还需要你确认：同行人数。补充之后我再生成安排。",
-      "duration_seconds": 0.963
+      "duration_seconds": 0.771
     },
     {
       "id": "e05",
@@ -130,7 +128,7 @@
       "asked_clarification": true,
       "clarification_correct": true,
       "question": "还需要你确认：出行日期。补充之后我再生成安排。",
-      "duration_seconds": 1.049
+      "duration_seconds": 0.642
     },
     {
       "id": "e06",
@@ -154,7 +152,7 @@
       "asked_clarification": true,
       "clarification_correct": true,
       "question": "还需要你确认：出行日期、每人预算。补充之后我再生成安排。",
-      "duration_seconds": 1.05
+      "duration_seconds": 0.669
     },
     {
       "id": "e07",
@@ -190,7 +188,7 @@
       "asked_clarification": false,
       "clarification_correct": true,
       "question": null,
-      "duration_seconds": 1.136
+      "duration_seconds": 1.116
     },
     {
       "id": "e08",
@@ -208,7 +206,7 @@
       "asked_clarification": true,
       "clarification_correct": true,
       "question": "还需要你确认：出行日期、每人预算、同行人数。补充之后我再生成安排。",
-      "duration_seconds": 0.966
+      "duration_seconds": 0.798
     },
     {
       "id": "e09",
@@ -227,7 +225,7 @@
       "asked_clarification": true,
       "clarification_correct": true,
       "question": "还需要你确认：出行日期。补充之后我再生成安排。",
-      "duration_seconds": 1.185
+      "duration_seconds": 0.692
     },
     {
       "id": "e10",
@@ -239,8 +237,7 @@
         "budget_per_person": 250,
         "group_size": 4,
         "start_time": "10:00",
-        "end_time": "18:00",
-        "include_meal": false
+        "end_time": "18:00"
       },
       "correct": 4,
       "wrong": 1,
@@ -251,14 +248,12 @@
           "actual": 250
         }
       ],
-      "hallucinated": [
-        "include_meal"
-      ],
+      "hallucinated": [],
       "expect_clarification": false,
       "asked_clarification": false,
       "clarification_correct": true,
       "question": null,
-      "duration_seconds": 1.078
+      "duration_seconds": 0.965
     },
     {
       "id": "e11",
@@ -280,7 +275,7 @@
       "asked_clarification": false,
       "clarification_correct": true,
       "question": null,
-      "duration_seconds": 1.072
+      "duration_seconds": 0.923
     },
     {
       "id": "e12",
@@ -304,7 +299,7 @@
       "asked_clarification": false,
       "clarification_correct": true,
       "question": null,
-      "duration_seconds": 0.914
+      "duration_seconds": 0.848
     },
     {
       "id": "e13",
@@ -322,7 +317,7 @@
       "asked_clarification": true,
       "clarification_correct": true,
       "question": "还需要你确认：出行日期、同行人数。补充之后我再生成安排。",
-      "duration_seconds": 1.031
+      "duration_seconds": 0.892
     },
     {
       "id": "e14",
@@ -343,7 +338,7 @@
       "asked_clarification": true,
       "clarification_correct": true,
       "question": "还需要你确认：每人预算。补充之后我再生成安排。",
-      "duration_seconds": 0.708
+      "duration_seconds": 1.161
     },
     {
       "id": "e15",
@@ -364,7 +359,7 @@
       "asked_clarification": false,
       "clarification_correct": true,
       "question": null,
-      "duration_seconds": 1.134
+      "duration_seconds": 0.991
     },
     {
       "id": "e16",
@@ -388,7 +383,7 @@
       "asked_clarification": false,
       "clarification_correct": true,
       "question": null,
-      "duration_seconds": 1.076
+      "duration_seconds": 0.892
     },
     {
       "id": "e17",
@@ -411,7 +406,7 @@
       "asked_clarification": false,
       "clarification_correct": true,
       "question": null,
-      "duration_seconds": 0.87
+      "duration_seconds": 0.944
     },
     {
       "id": "e18",
@@ -436,7 +431,7 @@
       "asked_clarification": false,
       "clarification_correct": true,
       "question": null,
-      "duration_seconds": 1.071
+      "duration_seconds": 0.698
     },
     {
       "id": "e19",
@@ -452,7 +447,7 @@
       "asked_clarification": true,
       "clarification_correct": true,
       "question": "还需要你确认：出行日期、每人预算、同行人数。补充之后我再生成安排。",
-      "duration_seconds": 1.171
+      "duration_seconds": 0.969
     },
     {
       "id": "e20",
@@ -481,7 +476,7 @@
       "asked_clarification": false,
       "clarification_correct": true,
       "question": null,
-      "duration_seconds": 0.932
+      "duration_seconds": 0.766
     }
   ]
 }

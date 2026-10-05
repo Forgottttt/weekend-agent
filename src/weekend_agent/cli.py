@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import sys
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
@@ -23,8 +24,10 @@ def parser():
     action.add_argument("--doctor", action="store_true", help="离线检查模型配置，不联网、不显示密钥")
     action.add_argument("--check-api", action="store_true", help="两轮真实API请求，验证一次天气工具调用及结果回传，会消耗API额度")
     action.add_argument("--ask", metavar="文本", help="用一句自然语言描述条件，由模型抽取槽位后规划（需要 --live）")
-    result.add_argument("--suite", choices=["agent", "extraction", "retrieval", "all"], default="agent",
-                        help="--evaluate 运行的评测套件，默认 agent")
+    result.add_argument("--answer", action="append", metavar="补充",
+                        help="对澄清追问的补充回答，可重复；不提供时在终端交互追问")
+    result.add_argument("--suite", choices=["agent", "extraction", "retrieval", "citations", "all"],
+                        default="agent", help="--evaluate 运行的评测套件，默认 agent")
     result.add_argument("--port", type=int, default=8765)
     result.add_argument("--topic", default="tools")
     result.add_argument("--count", type=int, default=3)
@@ -81,17 +84,20 @@ def run_evaluate(args, mode: str) -> int:
         outcomes.append(report["passed"] == report["case_count"])
     if args.suite in ("extraction", "all"):
         if mode != "live":
-            print("槽位抽取评测需要真实模型，请加 --live。")
-            return 1
-        from .extraction_eval import evaluate_extraction
-        report = evaluate_extraction(output_dir=args.output_dir)
-        print(f"抽取评测：{report['case_count']} 例，模型请求 {report['model_calls']} 次。")
-        print(f"  槽位准确率     {report['slot_accuracy']:.1%}（{report['correct_slots']}/{report['stated_slots']}）")
-        print(f"  幻觉误填率     {report['hallucination_rate']:.1%}（{report['hallucinated_slots']}/{report['unstated_slots']} 个未声明槽位）")
-        print(f"  追问触发正确率 {report['clarification_accuracy']:.1%}（{report['clarification_correct_cases']}/{report['case_count']}）")
-        print(report["limitations"])
-        print("报告：", report["report_path"])
-        outcomes.append(report["errors"] == 0)
+            # --suite all 在离线模式下应当把不需要模型的套件跑完，而不是中途退出。
+            print("跳过槽位抽取评测：需要真实模型（加 --live）。")
+            if args.suite == "extraction":
+                return 1
+        else:
+            from .extraction_eval import evaluate_extraction
+            report = evaluate_extraction(output_dir=args.output_dir)
+            print(f"抽取评测：{report['case_count']} 例，模型请求 {report['model_calls']} 次。")
+            print(f"  槽位准确率     {report['slot_accuracy']:.1%}（{report['correct_slots']}/{report['stated_slots']}）")
+            print(f"  幻觉误填率     {report['hallucination_rate']:.1%}（{report['hallucinated_slots']}/{report['unstated_slots']} 个未声明槽位）")
+            print(f"  追问触发正确率 {report['clarification_accuracy']:.1%}（{report['clarification_correct_cases']}/{report['case_count']}）")
+            print(report["limitations"])
+            print("报告：", report["report_path"])
+            outcomes.append(report["errors"] == 0)
     if args.suite in ("retrieval", "all"):
         from .retrieval_eval import evaluate_retrieval
         report = evaluate_retrieval(output_dir=args.output_dir)
@@ -101,6 +107,23 @@ def run_evaluate(args, mode: str) -> int:
         print(f"  TF-IDF recall@k {tfidf['recall_at_k']:.1%}  MRR {tfidf['mrr']:.3f}")
         print(report["limitations"])
         print("报告：", report["report_path"])
+    if args.suite in ("citations", "all"):
+        if mode != "live":
+            print("跳过引用评审：需要真实模型（加 --live）。")
+            if args.suite == "citations":
+                return 1
+        else:
+            from .citation_eval import evaluate_citations
+            report = evaluate_citations(output_dir=args.output_dir)
+            print(f"引用评审：{report['case_count']} 例，其中 {report['judged_count']} 例有可评审的引用，"
+                  f"{report['skipped_count']} 例跳过，{report['error_count']} 例出错。")
+            print(f"  引用命中率 {report['citation_precision']:.1%}（{report['hit_total']}/{report['cited_total']}）")
+            print(f"  无关引用率 {report['unrelated_citation_rate']:.1%}")
+            if report["citation_recall"] is not None:
+                print(f"  引用召回率 {report['citation_recall']:.1%}")
+            print(report["limitations"])
+            print("报告：", report["report_path"])
+            outcomes.append(report["error_count"] == 0)
     return 0 if all(outcomes) else 1
 
 
@@ -143,18 +166,32 @@ def main(argv=None):
                 print("自然语言条件抽取需要真实模型，请加 --live。")
                 return 1
             from .config import ModelConfig
-            from .extraction import (clarification, extract_slots, merge,
-                                     missing_slots, provided_slots)
+            from .extraction import extract_until_complete, merge
             from .providers import APIProvider
-            slots = extract_slots(args.ask, APIProvider(ModelConfig.from_env()))
-            provided = provided_slots(slots)
-            print("从这句话抽取到的条件：", json.dumps(provided, ensure_ascii=False))
-            absent = missing_slots(provided)
-            if absent:
-                print(clarification(absent))
+            supplied = list(args.answer or [])
+
+            def ask(prompt: str):
+                # 优先用 --answer 提供的补充（便于脚本化与自动化测试）；
+                # 其次是终端交互；两者都没有就只报出待确认的问题。
+                if supplied:
+                    print(prompt)
+                    print("你的补充：", supplied[0])
+                    return supplied.pop(0)
+                if not sys.stdin.isatty():
+                    return None
+                return input(prompt + "\n你的补充：")
+
+            result = extract_until_complete(args.ask, APIProvider(ModelConfig.from_env()), ask=ask)
+            print("从这句话抽取到的条件：", json.dumps(result.provided, ensure_ascii=False))
+            if result.asked:
+                print(f"经过 {result.rounds} 轮补充后条件已齐全。")
+            if not result.complete:
+                print(result.pending)
+                if not supplied and not sys.stdin.isatty():
+                    print("（可用 --answer 提供补充，或在终端里直接运行以交互追问。）")
                 return 2
-            values = merge(values, provided)
-            question = args.ask
+            values = merge(values, result.provided)
+            question = result.text
             print("已合并进表单条件，开始规划。")
         while True:
             result = service.plan(values, question, mode, session_id)

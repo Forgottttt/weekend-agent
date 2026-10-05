@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # 全部使用内存模拟响应与本地 HTTP，不访问网络、不需要密钥。
+      - name: 单元测试
+        run: PYTHONPATH=src python3 -m unittest discover -s tests -v
+
+      # 离线规则回归与检索对比，均为零 API 成本。
+      - name: 离线回归
+        run: python3 main.py --evaluate
+      - name: 检索评测（BM25 vs TF-IDF）
+        run: python3 main.py --evaluate --suite retrieval
+
+      # 语料生成必须确定性：重新生成后不应产生任何差异。
+      - name: 语料生成幂等性
+        run: |
+          PYTHONPATH=src python3 scripts/build_corpus.py
+          git diff --exit-code src/weekend_agent/data/guides.json src/weekend_agent/data/retrieval_cases.json
+
+      # stdio 服务不能污染 stdout，这是它的核心约束之一。
+      - name: MCP stdio 服务只输出 JSON-RPC
+        run: |
+          out=$(printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
+            | PYTHONPATH=src python3 scripts/mcp_server.py 2>/dev/null)
+          echo "$out"
+          echo "$out" | python3 -c "import json,sys; [json.loads(l) for l in sys.stdin if l.strip()]"

@@ -71,7 +71,22 @@ class TripTools:
             if place["price_per_person"] > max_price:
                 continue
             found.append(place)
-        return {"data_mode": "fictional_demo", "places": found, "count": len(found)}
+        result = {"data_mode": "fictional_demo", "places": found, "count": len(found)}
+        # 无解时给出判决性提示，避免模型换参数反复空转、白白烧掉工具调用额度。
+        # 注意"找到地点"不等于"能满足用餐要求"：带美食标签的非餐厅地点也会被搜到，
+        # 因此这里按"预算内有没有真正的餐厅"判断，与本次是否搜到结果无关。
+        affordable_food = [place for place in self.places.values()
+                           if place["category"] == "food"
+                           and place["price_per_person"] <= max_price]
+        if self.include_meal and not affordable_food:
+            result["hint"] = ("用户要求安排用餐，但当前预算下没有任何餐厅可选，"
+                              "换参数继续搜索也不会出现新地点。"
+                              '请直接提交 {"status":"no_plan","stops":[],"guide_ids":[]}，'
+                              "并说明需要放宽预算或取消用餐要求。")
+        elif not found:
+            result["hint"] = ("没有符合条件的地点。继续用更严格的参数搜索不会有新结果，"
+                              "请放宽标签、室内外偏好或预算后重试。")
+        return result
 
     def get_route(self, from_id: str, to_id: str) -> dict:
         source, target = self._place(from_id), self._place(to_id)
@@ -187,6 +202,36 @@ TOOL_SCHEMAS = [
 ]
 
 
+# Agent 内部控制工具：模型交付最终方案的通道。
+# 它不由 TripTools 实现，也不通过工具注册表执行——参数天然是合法 JSON，
+# 因此从结构上消除了「模型把 JSON 混在解释文字里」这类格式问题。
+SUBMIT_PLAN_NAME = "submit_plan"
+CONTROL_TOOLS = frozenset({SUBMIT_PLAN_NAME})
+
+SUBMIT_PLAN_SCHEMA = function_schema(
+    SUBMIT_PLAN_NAME,
+    "提交最终行程方案。这是唯一被接受的交付方式：调用本工具即结束本轮，"
+    "不要再额外输出解释文字，也不要把方案写在普通回复里。",
+    {
+        "status": field("string", enum=["planned", "no_plan"],
+                        description="planned=有方案；no_plan=没找到候选，不代表证明无解"),
+        "stops": field("array", maxItems=8, items={"type": "object", "properties": {
+            "place_id": field("string", description="必须来自本轮 search_places"),
+            "start": field("string", description="HH:MM"),
+        }, "required": ["place_id", "start"], "additionalProperties": False}),
+        "guide_ids": field("array", maxItems=5, items=field("string"),
+                           description="必须来自本轮 search_guides"),
+    })
+
+TOOL_SCHEMAS.append(SUBMIT_PLAN_SCHEMA)
+
+# 业务工具名集合：MCP 等外部集成只应暴露这些，不包含 submit_plan。
+BUSINESS_TOOL_NAMES = tuple(item["function"]["name"] for item in TOOL_SCHEMAS
+                            if item["function"]["name"] not in CONTROL_TOOLS)
+
+SUBMIT_PLAN_PARAMETERS = SUBMIT_PLAN_SCHEMA["function"]["parameters"]
+
+
 def validate_arguments(value: Any, schema: dict, path: str = "arguments") -> None:
     """只实现本项目用到的 JSON Schema 子集；参数检查不依赖第三方库。"""
     kinds = schema["type"]
@@ -199,6 +244,8 @@ def validate_arguments(value: Any, schema: dict, path: str = "arguments") -> Non
     }
     if not any(matches[kind] for kind in kinds):
         raise ValueError(f"{path} 类型应为 {kinds}")
+    if "enum" in schema and value not in schema["enum"]:
+        raise ValueError(f"{path} 必须是 {schema['enum']} 之一")
     if type(value) in (int, float):
         if not math.isfinite(value):
             raise ValueError(f"{path} 必须是有限数字")
@@ -227,11 +274,17 @@ class ToolRegistry:
         self.schemas = TOOL_SCHEMAS
         self.by_name = {item["function"]["name"]: item["function"] for item in self.schemas}
 
+    def validate_call(self, name: str, arguments: Any) -> None:
+        """只校验参数、不执行。Agent 用它校验 submit_plan 的提交内容。"""
+        if name not in self.by_name:
+            raise ValueError(f"未知工具：{name}")
+        validate_arguments(arguments, self.by_name[name]["parameters"])
+
     def execute(self, name: str, arguments: Any) -> dict:
         try:
-            if name not in self.by_name:
-                raise ValueError(f"未知工具：{name}")
-            validate_arguments(arguments, self.by_name[name]["parameters"])
+            self.validate_call(name, arguments)
+            if name in CONTROL_TOOLS:
+                raise ValueError(f"{name} 由 Agent 循环处理，不通过工具注册表执行")
             return {"ok": True, "data": getattr(self.tools, name)(**arguments)}
-        except (ValueError, TypeError, KeyError) as error:
+        except (ValueError, TypeError, KeyError, AttributeError) as error:
             return {"ok": False, "error": str(error)}

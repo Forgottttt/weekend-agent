@@ -1,26 +1,61 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>周末去哪玩</title><link rel="stylesheet" href="/style.css"><script defer src="/app.js"></script></head>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#173c32"><meta name="description" content="选好兴趣、时间和预算，和周末去哪玩一起规划杭州的一日安排。">
+  <title>周末去哪玩 · 杭州</title>
+  <link rel="preload" as="image" href="/assets/hangzhou-west-lake.jpg">
+  <link rel="stylesheet" href="/style.css"><script defer src="/app.js"></script>
+</head>
 <body>
-<header><div><span class="eyebrow">把周末留给喜欢的事</span><h1>周末去哪玩</h1><p>选好兴趣、时间和预算，排一份轻松的一日安排。</p></div><span class="badge">教学演示 · 地点与费用均为虚构</span></header>
-<main>
-<section class="card"><h2>这次想怎么过？</h2><form id="trip-form">
-<div class="row"><label>城市<input value="杭州" readonly></label><label>出行日期<input id="travel_date" type="date" value="2026-11-21" required></label></div>
-<div class="row"><label>每人预算（元）<input id="budget" type="number" min="0" max="10000" step="0.01" value="200" required></label><label>同行人数<input id="group" type="number" min="1" max="20" value="2" required></label></div>
-<div class="row"><label>开始时间<input id="start" type="time" value="10:00" required></label><label>结束时间<input id="end" type="time" value="18:00" required></label></div>
-<label>兴趣（用逗号分开）<input id="tags" value="拍照，美食" placeholder="拍照、文化、自然、美食"></label>
-<div class="row"><label>室内外偏好<select id="indoor"><option value="any">都可以</option><option value="inside">室内</option><option value="outside">户外</option></select></label><label>运行方式<select id="mode"><option value="demo">离线演示</option><option value="live">真实模型（需配置）</option></select></label></div>
-<div class="checks"><label><input id="rain" type="checkbox">模拟雨天</label><label><input id="meal" type="checkbox" checked>安排用餐</label></div>
-<label>补充要求<textarea id="question" rows="2" maxlength="2000" placeholder="例：这周六下午想带爸妈出去走走，人均一百五以内，最好能坐下吃个饭"></textarea></label>
-<p class="hint">离线演示按表单生成，不理解这句话。真实模型模式下可点「解析这句话」，由模型抽取条件填入上面的表单，你确认后再生成。</p>
-<p id="model-status" class="hint">正在检查模型配置……</p>
-<div class="actions"><button type="button" id="extract" class="secondary">解析这句话</button><button id="generate" type="submit">生成我的安排</button><button type="button" id="reset" class="secondary">新建会话</button></div>
-</form><p id="status" role="status" aria-live="polite">准备好就出发。</p></section>
-<section class="card result"><div class="result-heading"><h2>你的周末安排</h2><span id="plan-status" class="badge">等待生成</span></div>
-<div id="summary" class="summary">修改预算或切换雨天后再次生成，可以比较两份安排。</div>
-<div id="schedule"></div><div id="citations"></div><details><summary>查看生成过程</summary><div id="trace"></div></details>
-<p class="hint">费用仅含地点价格和相邻地点交通，不含往返起点交通及其他消费。请勿据此安排真实旅行。</p>
-</section>
-<section class="card history"><h2>已保存的安排</h2><p class="hint">从数据库读取，换浏览器后仍可查看。旧版本只保存会话最后一次结果；升级后的每次成功生成会单独保存。</p><button id="refresh-history" type="button" class="secondary">刷新历史</button><div id="history-list"></div><div id="run-list"></div></section></main>
-<footer>一份有依据、能检查、可修改的小计划。</footer>
-</body></html>
+<a class="skip-link" href="#planner">跳到行程规划</a>
+<header class="hero">
+  <img class="hero-photo" src="/assets/hangzhou-west-lake.jpg" alt="杭州西湖傍晚全景，湖面与远处的雷峰塔" fetchpriority="high" width="9409" height="2986">
+  <div class="hero-shade"></div>
+  <nav class="navigation page-width" aria-label="主导航">
+    <a class="brand" href="#"><span class="brand-icon" aria-hidden="true">w.</span><span>周末去哪玩<span class="brand-en">WEEKEND, WELL SPENT</span></span></a>
+    <div class="nav-links"><a href="#planner">规划周末</a><a href="#history">我的安排</a><span class="city-pill"><span aria-hidden="true">●</span> 杭州站</span></div>
+  </nav>
+  <div class="hero-content page-width">
+    <div class="hero-copy"><span class="eyebrow">HANGZHOU / WEEKEND EDITION</span><h1>把周末，<br>交给杭州<span class="title-dot">。</span></h1><p>慢一点，看湖、逛展、吃顿好饭。<br>你的时间和预算，都值得被认真安排。</p><a class="hero-cta" href="#planner">开始我的周末 <span aria-hidden="true">↗</span></a></div>
+    <div class="scene-caption"><span class="scene-dot" aria-hidden="true"></span><div><span class="scene-en">A MOMENT IN HANGZHOU</span><strong>西湖 · 雷峰塔</strong><span>把湖光留在这一刻</span></div></div>
+  </div>
+  <div class="hero-bottom page-width"><span>一座城，一天，刚刚好的安排。</span><span class="demo-note">行程使用虚构教学数据</span></div>
+</header>
+<main class="page-width">
+  <div class="section-intro" id="planner"><div><span class="section-kicker">MAKE IT YOURS</span><h2>这个周末，你说了算。</h2></div><p>告诉我几个小偏好，剩下的慢慢安排。</p></div>
+  <div class="planner-grid">
+    <section class="card form-card" aria-labelledby="form-heading">
+      <div class="card-heading"><div><span class="section-number">01 / 你的偏好</span><h3 id="form-heading">这次想怎么过？</h3></div><span class="small-location">杭州 HZ</span></div>
+      <form id="trip-form">
+        <label class="question-label" for="question">先说说你想要的周末</label>
+        <div class="question-box"><textarea id="question" rows="3" maxlength="2000" placeholder="例：两个人，预算150元，想拍照和吃饭，下午慢慢逛……"></textarea><button type="button" id="extract" class="parse-button">解析这句话 <span aria-hidden="true">↗</span></button></div>
+        <p class="hint question-hint">真实模型可把这句话填入表单，核对后再生成。</p>
+        <div class="presets" aria-label="兴趣快捷选择"><button type="button" data-preset="photo">拍照打卡</button><button type="button" data-preset="rain">雨天室内</button><button type="button" data-preset="culture">慢逛看展</button></div>
+        <div class="form-divider"><span>也可以直接填写</span></div>
+        <div class="row"><label>出行日期<input id="travel_date" type="date" value="2026-11-21" required></label><label>同行人数<span class="input-unit"><input id="group" type="number" min="1" max="20" value="2" required><span aria-hidden="true">人</span></span></label></div>
+        <label>每人预算（元）<span class="input-unit"><input id="budget" type="number" min="0" max="10000" step="0.01" value="200" required><span aria-hidden="true">元 / 人</span></span></label>
+        <div class="row"><label>开始时间<input id="start" type="time" value="10:00" required></label><label>结束时间<input id="end" type="time" value="18:00" required></label></div>
+        <label>兴趣（用逗号分开）<input id="tags" value="拍照，美食" placeholder="拍照、文化、自然、美食"></label>
+        <label>室内外偏好<select id="indoor"><option value="any">都可以，轻松一点就好</option><option value="inside">室内</option><option value="outside">户外</option></select></label>
+        <div class="checks"><label><input id="rain" type="checkbox"><span>模拟雨天</span></label><label><input id="meal" type="checkbox" checked><span>安排用餐</span></label></div>
+        <div class="connection"><label for="mode">运行方式</label><select id="mode"><option value="demo">离线演示</option><option value="live">真实模型（DeepSeek）</option></select><p id="model-status" class="hint">正在检查模型配置……</p></div>
+        <div class="actions"><button id="generate" type="submit">生成我的安排 <span aria-hidden="true">↗</span></button><button type="button" id="reset" class="secondary">新建会话</button></div>
+      </form>
+      <p id="status" role="status" aria-live="polite">选好条件，就可以出发了。</p>
+    </section>
+    <section class="card result" aria-labelledby="result-heading">
+      <div class="card-heading"><div><span class="section-number">02 / 周末提案</span><h3 id="result-heading">你的杭州一日</h3></div><span id="plan-status" class="badge">等待灵感</span></div>
+      <div id="empty-state" class="empty-state"><div class="empty-art" aria-hidden="true"><span class="sun"></span><span class="hill hill-one"></span><span class="hill hill-two"></span><span class="water"></span><span class="boat"></span></div><span class="section-kicker">A DAY TO LOOK FORWARD TO</span><h4>好日子，从一个小计划开始。</h4><p>逛逛喜欢的地方，留点时间吃饭和发呆。<br>填好左边的条件，让这一天慢慢成形。</p><div class="empty-tags"><span>按预算安排</span><span>检查时间</span><span>保存行程</span></div></div>
+      <div id="summary" class="summary" hidden></div><div id="schedule" class="timeline"></div>
+      <div id="progress-panel" class="progress-panel" hidden><span class="loading-dot" aria-hidden="true"></span><div><strong>正在安排你的周末</strong><p id="progress-text" aria-live="polite">正在查看你的条件……</p></div></div>
+      <details id="references" class="references" hidden><summary>这份安排的参考资料 <span aria-hidden="true">＋</span></summary><div id="citations"></div></details>
+      <details class="trace-details"><summary>查看生成过程 <span aria-hidden="true">＋</span></summary><div id="trace"></div></details>
+      <p class="hint cost-note">地点、天气与费用为虚构教学数据；费用只含地点与相邻站交通，请勿据此安排真实旅行。</p>
+    </section>
+  </div>
+  <section class="history-section" id="history" aria-labelledby="history-heading"><div class="section-intro"><div><span class="section-kicker">YOUR WEEKEND ARCHIVE</span><h2 id="history-heading">留住每一次周末灵感。</h2></div><div class="history-actions"><button id="refresh-history" type="button" class="text-button">刷新历史 <span aria-hidden="true">↻</span></button><button id="toggle-history" type="button" class="text-button" hidden>展开全部</button></div></div><div id="history-list" class="history-grid"></div><div id="run-list" class="run-list"></div></section>
+</main>
+<footer class="page-width"><div class="footer-top"><a class="footer-brand" href="#">周末去哪玩<span>把时间，花在喜欢的事上。</span></a><span>HANGZHOU · MADE FOR YOUR WEEKEND</span></div><div class="footer-bottom"><span>本机学习项目 · 杭州背景为真实照片，行程地点为教学示例。</span><span>摄影 <a href="https://commons.wikimedia.org/wiki/File:West_Lake_Panorama_at_Dusk.jpg" target="_blank" rel="noopener noreferrer">Yinweichen</a> / <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a> · 展示裁切</span></div></footer>
+</body>
+</html>

@@ -56,11 +56,14 @@ def create_server(port: int = 8765, service: PlanningService | None = None):
                                            "result": saved["result"], "version": saved["version"]})
                 except ValueError as error:
                     return self.send(404, {"error": str(error)})
-            filename = {"/": "index.html", "/app.js": "app.js", "/style.css": "style.css"}.get(parsed.path)
+            filename = {"/": "index.html", "/app.js": "app.js", "/style.css": "style.css",
+                        "/assets/hangzhou-west-lake.jpg": "assets/hangzhou-west-lake.jpg"}.get(parsed.path)
             if filename is None:
                 return self.send(404, {"error": "页面不存在"})
-            mime = {"index.html": "text/html", "app.js": "text/javascript", "style.css": "text/css"}[filename]
-            self.send(200, (web_root / filename).read_bytes(), mime + "; charset=utf-8")
+            mime = {"index.html": "text/html", "app.js": "text/javascript", "style.css": "text/css",
+                    "assets/hangzhou-west-lake.jpg": "image/jpeg"}[filename]
+            self.send(200, (web_root / filename).read_bytes(),
+                      mime if mime.startswith("image/") else mime + "; charset=utf-8")
 
         def extract(self, body):
             """把一句自然语言解析成表单条件。模型只提出候选值，前端填入后仍需用户确认。"""

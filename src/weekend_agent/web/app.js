@@ -1,22 +1,48 @@
 const $ = id => document.getElementById(id);
 let sessionId = localStorage.getItem('weekend-session') || null;
+let working = false;
+function setWorking(value) {
+  working = value;
+  document.querySelectorAll('main input,main select,main textarea,main button').forEach(control => { control.disabled = value; });
+}
 function textElement(tag, text) { const element = document.createElement(tag); element.textContent = text; return element; }
+function showEmpty() {
+  $('empty-state').hidden = false; $('summary').hidden = true;
+  $('references').hidden = true;
+}
 function render(result) {
   const plan = result.plan;
+  $('empty-state').hidden = true; $('summary').hidden = false;
+  $('progress-panel').hidden = true;
   $('schedule').replaceChildren(); $('citations').replaceChildren(); $('trace').replaceChildren();
-  $('plan-status').textContent = plan.status === 'planned' ? '校验通过' : '未找到候选方案';
+  $('plan-status').textContent = plan.status === 'planned' ? '校验通过' : '未找到候选';
+  $('plan-status').dataset.state = plan.status;
+  $('summary').replaceChildren(); $('summary').classList.toggle('no-plan', !plan.checked);
   if (plan.checked) {
     const checked = plan.checked;
-    $('summary').textContent = `每人 ${checked.cost_per_person} 元 · ${checked.group_size} 人共 ${checked.total_group_cost} 元 · ${checked.schedule.length} 个地点`;
-    for (const stop of checked.schedule) {
+    for (const [label, value, unit] of [['每人费用', checked.cost_per_person, '元'],
+      ['同行合计', checked.total_group_cost, '元'], ['行程地点', checked.schedule.length, '站']]) {
+      const stat = document.createElement('div'); stat.className = 'stat';
+      const amount = textElement('strong', String(value)); amount.className = 'stat-value';
+      const suffix = textElement('span', unit); suffix.className = 'stat-unit'; amount.append(suffix);
+      const caption = textElement('span', label); caption.className = 'stat-label';
+      stat.append(caption, amount); $('summary').append(stat);
+    }
+    for (const [index, stop] of checked.schedule.entries()) {
       const row = document.createElement('article'); row.className = 'stop';
       row.append(textElement('time', `${stop.start}–${stop.end}`));
-      const content = document.createElement('div'); content.append(textElement('h3', stop.name));
-      let detail = `地点费用：每人 ${stop.price_per_person} 元`;
-      if (stop.route_from_previous) detail += ` · 从上一站出发约 ${stop.route_from_previous.minutes} 分钟，交通每人 ${stop.route_from_previous.fare_per_person} 元`;
-      content.append(textElement('p', detail)); row.append(content); $('schedule').append(row);
+      const content = document.createElement('div'); content.className = 'stop-content';
+      const number = textElement('span', `STOP ${String(index + 1).padStart(2, '0')}`); number.className = 'stop-index';
+      content.append(number, textElement('h3', stop.name));
+      content.append(textElement('p', `地点费用 · 每人 ${stop.price_per_person} 元`));
+      if (stop.route_from_previous) {
+        const route = textElement('span', `从上一站约 ${stop.route_from_previous.minutes} 分钟 · 交通每人 ${stop.route_from_previous.fare_per_person} 元`);
+        route.className = 'route-tag'; content.append(route);
+      }
+      row.append(content); $('schedule').append(row);
     }
   } else $('summary').textContent = '本轮未找到通过校验的候选方案。可以增加预算、放宽时间或取消用餐要求后重试；这不证明不存在可行方案。';
+  $('references').hidden = !plan.citations.length;
   for (const citation of plan.citations) $('citations').append(textElement('p', `[${citation.id}] ${citation.title}：${citation.text}`));
   $('trace').append(textElement('p', `模型请求 ${result.model_calls} 次；工具请求 ${result.tool_calls} 次；最终校验 ${result.final_checks} 次；耗时 ${result.duration_seconds} 秒。`));
   $('trace').append(textElement('p', `模型：${result.model}；HTTP 尝试 ${result.http_attempts ?? 0} 次；输入 ${result.input_tokens ?? 0} token，输出 ${result.output_tokens ?? 0} token（仅已收到的用量）。`));
@@ -26,6 +52,7 @@ function render(result) {
   }
 }
 function fill(request, mode) {
+  document.querySelectorAll('[data-preset]').forEach(item => item.setAttribute('aria-pressed', 'false'));
   $('travel_date').value = request.travel_date; $('budget').value = request.budget_per_person;
   $('group').value = request.group_size; $('start').value = request.start_time; $('end').value = request.end_time;
   $('tags').value = request.tags.join('，'); $('rain').checked = request.rain; $('meal').checked = request.include_meal;
@@ -69,15 +96,19 @@ async function planStream(payload, onEvent) {
 
 $('trip-form').addEventListener('submit', async event => {
   event.preventDefault();
-  const controls = [...document.querySelectorAll('main input,main select,main textarea,main button')];
-  controls.forEach(control => { control.disabled = true; });
+  setWorking(true);
+  $('generate').setAttribute('aria-busy', 'true');
+  $('progress-panel').hidden = false;
+  $('progress-text').textContent = '正在查看你的条件……';
+  $('plan-status').textContent = '正在生成';
+  $('plan-status').dataset.state = 'busy';
   $('status').textContent = '正在安排，请稍候……';
   const request = {city:'杭州', travel_date:$('travel_date').value, budget_per_person:Number($('budget').value),
     group_size:Number($('group').value), tags:$('tags').value.split(/[,，、]/).map(s=>s.trim()).filter(Boolean),
     indoor:$('indoor').value === 'any' ? null : $('indoor').value === 'inside', rain:$('rain').checked,
     start_time:$('start').value, end_time:$('end').value, include_meal:$('meal').checked};
   try {
-    $('trace').replaceChildren();
+    $('trace').replaceChildren(); $('run-list').replaceChildren();
     const progress = [];
     let result = null, failure = null;
     await planStream({request, question:$('question').value.trim() || '请根据表单规划行程。',
@@ -85,6 +116,8 @@ $('trip-form').addEventListener('submit', async event => {
       if (payload.kind === 'result') { result = payload.result; return; }
       if (payload.kind === 'error') { failure = payload.error; return; }
       const text = describeEvent(payload);
+      const names = {get_weather:'正在查看教学天气',search_places:'正在寻找合适的地点',search_guides:'正在整理参考资料',get_route:'正在计算相邻站交通',check_itinerary:'正在检查预算与时间'};
+      if (payload.kind === 'tool') $('progress-text').textContent = names[payload.name] || '正在整理安排……';
       if (text) { progress.push(text); $('trace').append(textElement('p', text)); }
     });
     if (failure) throw new Error(failure);
@@ -95,14 +128,16 @@ $('trip-form').addEventListener('submit', async event => {
     // render 会清空 trace，这里把刚才的实时进度补回末尾。
     for (const text of progress) $('trace').append(textElement('p', text));
     $('status').textContent = '安排已保存。修改条件后再生成可查看变化；刷新页面可以恢复最近一次结果。';
-  } catch (error) { $('status').textContent = error.message; }
-  finally { controls.forEach(control => { control.disabled = false; }); }
+  } catch (error) { $('status').textContent = error.message;
+    $('plan-status').textContent = '生成未完成'; $('plan-status').dataset.state = 'error';
+  } finally { $('progress-panel').hidden = true; $('generate').removeAttribute('aria-busy'); setWorking(false); }
 });
 function resetSession(message) {
   extractBase = ''; $('question').placeholder = DEFAULT_PLACEHOLDER;
   sessionId = null; localStorage.removeItem('weekend-session');
   $('schedule').replaceChildren(); $('citations').replaceChildren(); $('trace').replaceChildren();
-  $('plan-status').textContent = '等待生成'; $('summary').textContent = '按当前条件生成一份新的安排。';
+  $('plan-status').textContent = '等待灵感'; $('plan-status').dataset.state = '';
+  $('progress-panel').hidden = true; $('run-list').replaceChildren(); showEmpty();
   $('status').textContent = message;
 }
 $('reset').addEventListener('click', () => resetSession('已新建会话，下次生成开始新的记录。'));
@@ -141,8 +176,7 @@ $('extract').addEventListener('click', async () => {
     return;
   }
   const payload = extractBase ? `${extractBase}\n补充说明：${typed}` : typed;
-  const extractControls = [...document.querySelectorAll('main input,main select,main textarea,main button')];
-  extractControls.forEach(control => { control.disabled = true; });
+  setWorking(true);
   $('status').textContent = '正在解析……';
   try {
     const response = await fetch('/api/extract', {method:'POST', headers:{'Content-Type':'application/json'},
@@ -163,7 +197,7 @@ $('extract').addEventListener('click', async () => {
       $('status').textContent = '已把解析到的条件填入表单。请核对后再生成安排；模型没提到的条件保持原样。';
     }
   } catch (error) { $('status').textContent = error.message; }
-  finally { extractControls.forEach(control => { control.disabled = false; }); }
+  finally { setWorking(false); }
 });
 async function checkModelConfig() {
   try {
@@ -187,25 +221,42 @@ async function readJSON(url) {
   if (!response.ok) throw new Error(data.error || '读取失败');
   return data;
 }
+let historyExpanded = false;
+function shortDate(value) { return String(value || '').replaceAll('-', '/'); }
+function historyTimestamp(value) {
+  const date = new Date(String(value).replace(' ', 'T') + 'Z');
+  return Number.isNaN(date.valueOf()) ? '' : date.toLocaleDateString('zh-CN', {month:'2-digit', day:'2-digit'});
+}
 async function refreshHistory() {
   try {
     const data = await readJSON('/api/sessions');
     $('history-list').replaceChildren();
-    for (const item of data.sessions) {
-      const button = textElement('button', `${item.request.travel_date} · ${item.mode === 'live' ? '真实模型' : '离线'} · 每人${item.request.budget_per_person}元 · ${item.version}次生成`);
-      button.type = 'button'; button.className = 'secondary';
+    $('toggle-history').hidden = data.sessions.length <= 6;
+    $('toggle-history').textContent = historyExpanded ? '收起记录' : `查看全部 (${data.sessions.length})`;
+    for (const item of historyExpanded ? data.sessions : data.sessions.slice(0, 6)) {
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'history-item';
+      const meta = document.createElement('div'); meta.className = 'history-meta';
+      const mode = textElement('span', item.mode === 'live' ? 'DEEPSEEK / 真实模型' : '离线演示'); mode.className = 'history-mode';
+      meta.append(mode, textElement('span', historyTimestamp(item.updated_at) + ' 保存'));
+      button.append(meta, textElement('strong', shortDate(item.request.travel_date) + ' · 杭州一日'));
+      button.append(textElement('p', `每人预算 ${item.request.budget_per_person} 元 · ${item.request.group_size} 人同行`));
+      const bottom = document.createElement('div'); bottom.className = 'history-bottom';
+      bottom.append(textElement('span', `${(item.request.tags || []).join(' / ') || '随心逛逛'} · ${item.version} 次生成`), textElement('span', '↗'));
+      button.append(bottom); button.disabled = working;
       button.addEventListener('click', async () => {
+        if (working) return;
         try {
           const saved = await readJSON(`/api/session?id=${encodeURIComponent(item.session_id)}`);
           resetSession('已打开保存的会话，可以调整条件继续生成。');
           sessionId = item.session_id; localStorage.setItem('weekend-session', sessionId);
           fill(saved.request, saved.result.mode); render(saved.result);
           const history = await readJSON(`/api/runs?session_id=${encodeURIComponent(sessionId)}`);
-          $('run-list').replaceChildren(textElement('p', '查看该会话以前的生成结果：'));
+          $('run-list').replaceChildren(textElement('p', history.runs.length ? '查看这个会话的生成记录：' : '这个会话来自旧版本，已恢复最新结果。'));
           for (const run of history.runs) {
             const old = textElement('button', `第${run.version}次 · 每人预算${run.request.budget_per_person}元`);
             old.type = 'button'; old.className = 'secondary';
             old.addEventListener('click', async () => {
+              if (working) return;
               try {
                 const snapshot = await readJSON(`/api/run?id=${run.run_id}`);
                 resetSession('正在查看历史快照；再次生成会创建新会话。');
@@ -218,8 +269,24 @@ async function refreshHistory() {
       });
       $('history-list').append(button);
     }
-    if (!data.sessions.length) $('history-list').append(textElement('p','还没有保存的安排，生成后会出现在这里。'));
+    if (!data.sessions.length) {
+      const empty = textElement('p','还没有保存的安排。第一份周末计划，会从这里开始。');
+      empty.className = 'history-empty'; $('history-list').append(empty);
+    }
   } catch (error) { $('history-list').textContent = error.message; }
 }
+$('toggle-history').addEventListener('click', () => { historyExpanded = !historyExpanded; refreshHistory(); });
 $('refresh-history').addEventListener('click', refreshHistory);
+document.querySelectorAll('[data-preset]').forEach(button => {
+  button.setAttribute('aria-pressed', 'false');
+  button.addEventListener('click', () => {
+    if (working) return;
+    const presets = {photo:{tags:'拍照，美食',rain:false,indoor:'any'},
+      rain:{tags:'文化，美食',rain:true,indoor:'inside'}, culture:{tags:'文化',rain:false,indoor:'any'}};
+    const values = presets[button.dataset.preset];
+    $('tags').value = values.tags; $('rain').checked = values.rain; $('indoor').value = values.indoor;
+    document.querySelectorAll('[data-preset]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+    $('status').textContent = '已填入偏好。还可以调整日期、预算和时间，再生成安排。';
+  });
+});
 (async () => { await restore(); await checkModelConfig(); await refreshHistory(); })();

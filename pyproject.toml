@@ -16,4 +16,4 @@ weekend-agent = "weekend_agent.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-weekend_agent = ["data/*.json", "web/*"]
+weekend_agent = ["data/*.json", "web/*", "web/assets/*"]

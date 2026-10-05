@@ -38,6 +38,16 @@ def create_server(port: int = 8765, service: PlanningService | None = None):
                 except (ValueError, OSError):
                     model = {"ready": False, "error": "模型配置有误，请在终端运行 python3 main.py --doctor 检查。"}
                 return self.send(200, {"ok": True, "data_mode": "fictional_demo", "model": model})
+            if parsed.path == "/api/sessions":
+                return self.send(200, {"sessions": service.store.list_sessions()})
+            if parsed.path in ("/api/runs", "/api/run"):
+                try:
+                    query = parse_qs(parsed.query)
+                    if parsed.path == "/api/runs":
+                        return self.send(200, {"runs": service.store.list_runs(query.get("session_id", [""])[0])})
+                    return self.send(200, service.store.load_run(int(query.get("id", [""])[0])))
+                except ValueError as error:
+                    return self.send(404, {"error": str(error)})
             if parsed.path == "/api/session":
                 try:
                     session_id = parse_qs(parsed.query).get("id", [""])[0]

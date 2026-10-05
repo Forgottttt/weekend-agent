@@ -191,3 +191,7 @@ tests/             业务、协议和集成测试（111 项）
 ```
 
 完整设计与取舍见 [ARCHITECTURE.md](docs/ARCHITECTURE.md)，当前验证状态见 [STATUS.md](docs/STATUS.md)。
+
+## 本机网页与数据库历史
+
+见 [本机使用说明](docs/LOCAL_WEB.md)。网页由 Python 后端调用本地配置的模型 API，SQLite 保存会话和每次成功生成的快照；网页可恢复历史。有模型配置时新会话默认使用真实模型。

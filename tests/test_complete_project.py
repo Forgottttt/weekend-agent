@@ -303,12 +303,26 @@ class ServiceTests(unittest.TestCase):
         self.assertTrue(result["events"], "结果里的事件不应为空")
         self.assertTrue(any(event["kind"] == "tool" for event in result["events"]))
 
+    def test_old_database_migrates_without_losing_session(self):
+        import sqlite3
+        old = Path(self.folder.name) / "old.sqlite3"
+        with sqlite3.connect(old) as connection:
+            connection.execute("""CREATE TABLE sessions(id TEXT PRIMARY KEY, mode TEXT,
+                messages TEXT, request TEXT, result TEXT, version INTEGER,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP)""")
+            connection.execute("INSERT INTO sessions VALUES('old','demo','[]','{}','{}',1,CURRENT_TIMESTAMP)")
+        migrated = SessionStore(old)
+        self.assertEqual(migrated.load('old')["version"], 1)
+        migrated.save('old', [], {}, {}, 1)
+        self.assertEqual(migrated.list_runs('old')[0]["version"], 2)
+
     def test_optimistic_write_prevents_overwrite(self):
         store = SessionStore(self.path)
         session_id = store.create("demo")
         store.save(session_id, [], {}, {}, 0)
         with self.assertRaisesRegex(RuntimeError, "其他请求"):
             store.save(session_id, [], {}, {}, 0)
+        self.assertEqual(len(store.list_runs(session_id)), 1)
 
     def test_same_session_concurrent_run_is_rejected(self):
         first = self.service.plan({})
@@ -344,6 +358,25 @@ class HTTPTests(unittest.TestCase):
         headers = {"Content-Type": "application/json"}
         if origin: headers["Origin"] = origin
         return urlopen(Request(self.base + path, data=json.dumps(body).encode(), headers=headers))
+
+    def test_database_history_and_snapshots_over_http(self):
+        with self.post({"request": {"budget_per_person": 80}}) as response:
+            first = json.load(response)
+        with self.post({"request": {"budget_per_person": 120},
+                        "session_id": first["session_id"]}) as response:
+            second = json.load(response)
+        with urlopen(self.base + "/api/sessions") as response:
+            sessions = json.load(response)["sessions"]
+        self.assertEqual(sessions[0]["version"], 2)
+        self.assertNotIn("messages", sessions[0])
+        with urlopen(self.base + "/api/runs?session_id=" + first["session_id"]) as response:
+            runs = json.load(response)["runs"]
+        self.assertEqual([r["version"] for r in runs], [2, 1])
+        with urlopen(self.base + "/api/run?id=" + str(runs[-1]["run_id"])) as response:
+            old = json.load(response)
+        self.assertEqual(old["request"]["budget_per_person"], 80)
+        self.assertEqual(second["request"]["budget_per_person"], 120)
+        self.assertEqual(old["result"], first)
 
     def test_plan_and_restore_over_http(self):
         with self.post({"request": {"rain": True}}) as response:

@@ -39,9 +39,18 @@ class SessionStore:
                 request TEXT NOT NULL, result TEXT NOT NULL, version INTEGER NOT NULL DEFAULT 0,
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)""")
 
+            connection.execute("""CREATE TABLE IF NOT EXISTS plan_runs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL REFERENCES sessions(id),
+                version INTEGER NOT NULL, request TEXT NOT NULL, result TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(session_id, version))""")
+            connection.execute("CREATE INDEX IF NOT EXISTS plan_runs_session ON plan_runs(session_id, id)")
+
     @contextmanager
     def connect(self):
         connection = sqlite3.connect(self.path, timeout=5)
+        connection.execute("PRAGMA foreign_keys=ON")
         try:
             with connection:
                 yield connection
@@ -72,3 +81,34 @@ class SessionStore:
                 updated_at=CURRENT_TIMESTAMP WHERE id=? AND version=?""", (*values, session_id, version))
             if cursor.rowcount != 1:
                 raise RuntimeError("会话已被其他请求更新，请重新加载后再试")
+            # 更新会话与新增历史在同一事务：并发版本失败时两者一起回滚。
+            connection.execute("INSERT INTO plan_runs(session_id,version,request,result) VALUES(?,?,?,?)",
+                               (session_id, version + 1, values[1], values[2]))
+
+    def list_sessions(self, limit: int = 50) -> list[dict]:
+        """列表只读小摘要，避免把工具消息和完整 trace 一起传给浏览器。"""
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError("列表数量必须在1–100之间")
+        with self.connect() as connection:
+            rows = connection.execute("""SELECT id,mode,request,version,updated_at
+                FROM sessions WHERE version > 0 ORDER BY updated_at DESC,id DESC LIMIT ?""",
+                                      (limit,)).fetchall()
+        return [{"session_id": row[0], "mode": row[1], "request": json.loads(row[2]),
+                 "version": row[3], "updated_at": row[4]} for row in rows]
+
+    def list_runs(self, session_id: str) -> list[dict]:
+        self.load(session_id)
+        with self.connect() as connection:
+            rows = connection.execute("""SELECT id,version,request,created_at FROM plan_runs
+                WHERE session_id=? ORDER BY id DESC LIMIT 100""", (session_id,)).fetchall()
+        return [{"run_id": row[0], "version": row[1], "request": json.loads(row[2]),
+                 "created_at": row[3]} for row in rows]
+
+    def load_run(self, run_id: int) -> dict:
+        with self.connect() as connection:
+            row = connection.execute("SELECT session_id,request,result,version FROM plan_runs WHERE id=?",
+                                     (run_id,)).fetchone()
+        if row is None:
+            raise ValueError("生成记录不存在")
+        return {"session_id": row[0], "request": json.loads(row[1]),
+                "result": json.loads(row[2]), "version": row[3]}

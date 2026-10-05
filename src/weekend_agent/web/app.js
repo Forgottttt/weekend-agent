@@ -69,7 +69,7 @@ async function planStream(payload, onEvent) {
 
 $('trip-form').addEventListener('submit', async event => {
   event.preventDefault();
-  const controls = [...$('trip-form').querySelectorAll('input,select,textarea,button')];
+  const controls = [...document.querySelectorAll('main input,main select,main textarea,main button')];
   controls.forEach(control => { control.disabled = true; });
   $('status').textContent = '正在安排，请稍候……';
   const request = {city:'杭州', travel_date:$('travel_date').value, budget_per_person:Number($('budget').value),
@@ -91,6 +91,7 @@ $('trip-form').addEventListener('submit', async event => {
     if (!result) throw new Error('没有收到结果，请重试');
     sessionId = result.session_id; localStorage.setItem('weekend-session', sessionId);
     render(result);
+    await refreshHistory();
     // render 会清空 trace，这里把刚才的实时进度补回末尾。
     for (const text of progress) $('trace').append(textElement('p', text));
     $('status').textContent = '安排已保存。修改条件后再生成可查看变化；刷新页面可以恢复最近一次结果。';
@@ -98,6 +99,7 @@ $('trip-form').addEventListener('submit', async event => {
   finally { controls.forEach(control => { control.disabled = false; }); }
 });
 function resetSession(message) {
+  extractBase = ''; $('question').placeholder = DEFAULT_PLACEHOLDER;
   sessionId = null; localStorage.removeItem('weekend-session');
   $('schedule').replaceChildren(); $('citations').replaceChildren(); $('trace').replaceChildren();
   $('plan-status').textContent = '等待生成'; $('summary').textContent = '按当前条件生成一份新的安排。';
@@ -139,7 +141,8 @@ $('extract').addEventListener('click', async () => {
     return;
   }
   const payload = extractBase ? `${extractBase}\n补充说明：${typed}` : typed;
-  const button = $('extract'); button.disabled = true;
+  const extractControls = [...document.querySelectorAll('main input,main select,main textarea,main button')];
+  extractControls.forEach(control => { control.disabled = true; });
   $('status').textContent = '正在解析……';
   try {
     const response = await fetch('/api/extract', {method:'POST', headers:{'Content-Type':'application/json'},
@@ -160,13 +163,14 @@ $('extract').addEventListener('click', async () => {
       $('status').textContent = '已把解析到的条件填入表单。请核对后再生成安排；模型没提到的条件保持原样。';
     }
   } catch (error) { $('status').textContent = error.message; }
-  finally { button.disabled = false; }
+  finally { extractControls.forEach(control => { control.disabled = false; }); }
 });
 async function checkModelConfig() {
   try {
     const response = await fetch('/api/health');
     const health = await response.json();
     const model = health.model || {};
+    if (!sessionId && model.ready) $('mode').value = 'live';
     $('model-status').textContent = model.ready
       ? `模型 ${model.model} 的本地配置已就绪（尚不代表联网验证通过）。真实模型生成会消耗 API 额度。`
       : model.error || '模型密钥尚未配置，可先使用离线演示。按第11课填写本地 .env 后刷新此页。';
@@ -178,5 +182,44 @@ async function restore() {
     if (!response.ok || !saved.result.plan) throw new Error('会话不可恢复'); fill(saved.request, saved.result.mode); render(saved.result); $('status').textContent = '已恢复最近一次安排。';
   } catch { sessionId = null; localStorage.removeItem('weekend-session'); }
 }
-restore();
-checkModelConfig();
+async function readJSON(url) {
+  const response = await fetch(url); const data = await response.json();
+  if (!response.ok) throw new Error(data.error || '读取失败');
+  return data;
+}
+async function refreshHistory() {
+  try {
+    const data = await readJSON('/api/sessions');
+    $('history-list').replaceChildren();
+    for (const item of data.sessions) {
+      const button = textElement('button', `${item.request.travel_date} · ${item.mode === 'live' ? '真实模型' : '离线'} · 每人${item.request.budget_per_person}元 · ${item.version}次生成`);
+      button.type = 'button'; button.className = 'secondary';
+      button.addEventListener('click', async () => {
+        try {
+          const saved = await readJSON(`/api/session?id=${encodeURIComponent(item.session_id)}`);
+          resetSession('已打开保存的会话，可以调整条件继续生成。');
+          sessionId = item.session_id; localStorage.setItem('weekend-session', sessionId);
+          fill(saved.request, saved.result.mode); render(saved.result);
+          const history = await readJSON(`/api/runs?session_id=${encodeURIComponent(sessionId)}`);
+          $('run-list').replaceChildren(textElement('p', '查看该会话以前的生成结果：'));
+          for (const run of history.runs) {
+            const old = textElement('button', `第${run.version}次 · 每人预算${run.request.budget_per_person}元`);
+            old.type = 'button'; old.className = 'secondary';
+            old.addEventListener('click', async () => {
+              try {
+                const snapshot = await readJSON(`/api/run?id=${run.run_id}`);
+                resetSession('正在查看历史快照；再次生成会创建新会话。');
+                fill(snapshot.request, snapshot.result.mode); render(snapshot.result);
+              } catch (error) { $('status').textContent = error.message; }
+            });
+            $('run-list').append(old);
+          }
+        } catch (error) { $('status').textContent = error.message; }
+      });
+      $('history-list').append(button);
+    }
+    if (!data.sessions.length) $('history-list').append(textElement('p','还没有保存的安排，生成后会出现在这里。'));
+  } catch (error) { $('history-list').textContent = error.message; }
+}
+$('refresh-history').addEventListener('click', refreshHistory);
+(async () => { await restore(); await checkModelConfig(); await refreshHistory(); })();

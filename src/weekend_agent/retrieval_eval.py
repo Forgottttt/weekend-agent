@@ -251,7 +251,8 @@ def evaluate_chunking(top_k: int = 5, output_dir: Path | None = None,
 # ---------------------------------------------------------------------------
 
 def evaluate_methods(top_k: int = 5, output_dir: Path | None = None,
-                     rerank_provider=None, recall_k: int = 10) -> dict:
+                     rerank_provider=None, embedding_provider=None,
+                     recall_k: int = 10) -> dict:
     """在同一批标注查询上对比四种检索策略。
 
     对应工业界的三段式：召回（稀疏/稠密）→ 融合（RRF）→ 精排（LLM）。
@@ -265,12 +266,14 @@ def evaluate_methods(top_k: int = 5, output_dir: Path | None = None,
 
     documents = json.loads(guides_path.read_text(encoding="utf-8"))
     sparse = GuideIndex(guides_path)
-    dense = DenseIndex(documents, ExpansionEmbedding(documents))
+    # 不传后端就用零依赖的二阶共现实现；传了就用它（例如真实的 embedding API）。
+    backend = embedding_provider or ExpansionEmbedding(documents)
+    dense = DenseIndex(documents, backend)
     hybrid = HybridIndex(sparse, dense)
 
     methods = {
         "bm25_sparse": ("BM25 稀疏检索", lambda q, k: sparse.search(q, k)),
-        "dense_expansion": ("二阶共现稠密检索", lambda q, k: dense.search(q, k)),
+        "dense": (f"稠密检索（{backend.name}）", lambda q, k: dense.search(q, k)),
         "hybrid_rrf": ("稀疏 + 稠密 RRF 融合", lambda q, k: hybrid.search(q, k, recall_k)),
     }
     reranker = None
@@ -301,14 +304,15 @@ def evaluate_methods(top_k: int = 5, output_dir: Path | None = None,
         "corpus_size": len(documents),
         "top_k": top_k,
         "recall_k": recall_k,
+        "embedding_backend": backend.name,
         "rerank_used": rerank_provider is not None,
         "rerank_model_calls": reranker.model_calls if reranker else 0,
         "rerank_hallucinated_ids": sorted(set(reranker.hallucinated_ids)) if reranker else [],
         "generated_at": now.isoformat(timespec="seconds"),
         "methods": summary,
         "limitations": ("语料与标注均为脚本合成的自动标注；查询只有正例、没有负例与分级相关性。"
-                        "稠密后端是纯标准库的二阶共现实现，不是语义 embedding 模型，"
-                        "因此它**不能**代表真实向量检索的效果；这四个数字只在彼此之间可比。"),
+                        f"稠密后端为 {backend.name}；若它不是语义 embedding 模型，"
+                        "则不能代表真实向量检索的效果，四个数字只在彼此之间可比。"),
         "cases": rows,
     }
     target_dir = output_dir or PROJECT_ROOT / "outputs"

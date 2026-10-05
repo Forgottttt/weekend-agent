@@ -118,16 +118,20 @@ class ApiEmbeddingProvider:
     """OpenAI 兼容的 /embeddings 后端（智谱 / 阿里 / 百度 / 本地 Ollama 均可用）。"""
 
     def __init__(self, base_url: str, api_key: str, model: str,
-                 timeout_seconds: int = 60, max_retries: int = 1):
+                 timeout_seconds: int = 60, max_retries: int = 1, batch_size: int = 32):
         if not base_url.startswith("https://") and not base_url.startswith("http://127.0.0.1"):
             raise ValueError("embedding 基础地址必须是 https，或本机 http://127.0.0.1")
         if not model.strip():
             raise ValueError("embedding 模型名不能为空")
+        if type(batch_size) is not int or not 1 <= batch_size <= 256:
+            raise ValueError("batch_size 必须是 1–256 的整数")
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.model = model
         self.timeout_seconds = timeout_seconds
         self.max_retries = max_retries
+        # 建库时一次要送几百篇文档，必须分批，否则超过服务端的单请求条数上限。
+        self.batch_size = batch_size
         self.name = f"api:{model}"
         self.http_attempts = 0
 
@@ -137,6 +141,12 @@ class ApiEmbeddingProvider:
     def embed(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
+        vectors: list[list[float]] = []
+        for start in range(0, len(texts), self.batch_size):
+            vectors.extend(self._embed_batch(texts[start:start + self.batch_size]))
+        return vectors
+
+    def _embed_batch(self, texts: list[str]) -> list[list[float]]:
         payload = json.dumps({"model": self.model, "input": texts}, ensure_ascii=False).encode("utf-8")
         request = Request(self.base_url + "/embeddings", data=payload, method="POST",
                           headers={"Content-Type": "application/json",

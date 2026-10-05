@@ -1,10 +1,14 @@
 # 周末去哪玩
 
-一个可运行、可逐课学习的城市一日游 Agent：自然语言或表单输入 → 工具调用 → 资料检索 → 最终约束校验 → 网页展示 → 会话保存。
+一个可运行的城市一日游 Agent：自然语言或表单输入 → 工具调用 → 资料检索 → 最终约束校验 → 网页展示 → 会话保存。
 
-Python 3.11 以上，**只用标准库，零第三方运行依赖**，核心代码约 2900 行。
+Python 3.11 以上，**只用标准库，零第三方运行依赖**，核心代码约 2700 行。
 
 **全部地点、天气、费用、路线和资料均为虚构教学数据。**
+
+![网页界面](assets/web-preview.png)
+
+> 界面预览为 v0.3.0 版本；当前版本已增加「解析这句话」自然语言入口与历史记录列表。
 
 ## 真实模型实测结果
 
@@ -92,11 +96,11 @@ python3 main.py --demo --rain --budget 80
 python3 main.py --demo --chat    # /budget 80 改预算，/rain 切雨天，exit 退出
 ```
 
-网页可改预算、人数、时间、兴趣、雨天、室内外和用餐要求；可用一句话解析条件（支持多轮补充）；**生成过程通过 SSE 实时显示工具调用进度**；刷新恢复最近完成结果。
+网页可改预算、人数、时间、兴趣、雨天、室内外和用餐要求；可用一句话解析条件（支持多轮补充）；**生成过程通过 SSE 实时显示工具调用进度**；刷新或从历史列表恢复过去的生成结果。
 
 ## 接入 DeepSeek
 
-详细步骤与错误解释见 [第 11 课](docs/LESSON_11.md)。项目自动读取根目录 `.env`，进程环境变量优先。
+项目自动读取根目录 `.env`，进程环境变量优先。
 
 ```bash
 python3 main.py --doctor       # 不联网，只检查脱敏配置状态
@@ -113,7 +117,7 @@ python3 main.py --live --ask "预算500" --answer "11月21号" --answer "两个�
 ## 验证与评测
 
 ```bash
-PYTHONPATH=src python3 -m unittest discover -s tests -v   # 111 项，全部内存模拟响应，不联网
+PYTHONPATH=src python3 -m unittest discover -s tests -v   # 113 项，全部内存模拟响应，不联网
 python3 main.py --evaluate                              # 离线规则回归
 python3 main.py --evaluate --live                       # 真实模型回归
 python3 main.py --evaluate --suite extraction --live    # 槽位抽取
@@ -151,12 +155,6 @@ printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
 2. **最终输出不是干净 JSON**：第一次修复只剥 Markdown 围栏（假设错误，把修复轮从 5/6 变成 6/6）；记录被拒原文后改为提取第一个配平的 JSON 对象，修复轮降为 0/6；最终进一步改为 `submit_plan` 工具调用，从结构上消除该问题。
 3. **无解场景空转**：模型在"要求用餐但预算内没有餐厅"时反复换参数搜索，耗尽工具调用额度。修复为在无解时返回判决性 `hint`，工具调用从 17 次降到 5 次。
 
-## 十二课与面试训练
-
-从 [统一课程入口](docs/LEARNING.md) 开始。第三至十二课为完整精读讲义。[学习记录](docs/STUDY_LOG.md) 留给你填写，不自动标记掌握。
-
-[54 题面试题库](docs/INTERVIEW_BANK.md) · [训练计划](docs/INTERVIEW_TRAINING.md) · [中文面经调研](docs/RESEARCH.md) · [简历表述](docs/RESUME.md)。
-
 ## 核心文件
 
 ```text
@@ -173,25 +171,28 @@ src/weekend_agent/
   planning.py        多站离线规则流程
   agent.py           消息循环、调用护栏、submit_plan 终审通道
   finalize.py        最终方案校验与应用渲染
-  memory.py          SQLite 与上下文选择
+  memory.py          SQLite 会话、上下文选择与生成快照
   service.py         会话和业务组装
   server.py          仅本机 HTTP 服务（含 SSE 进度流）
   evaluation.py      固定回归、弱基线与修复轮统计
   extraction_eval.py 抽取准确率 / 幻觉误填率 / 追问正确率
   citation_eval.py   引用命中率 / 召回率（LLM-as-judge）
-  interview.py       面试练习
   web/               HTML、CSS、JavaScript
-  data/              虚构地点、资料、用例和题库
+  data/              虚构地点、资料与评测用例
 scripts/build_corpus.py  确定性生成检索语料与标注查询
 scripts/mcp_server.py    最小 MCP stdio 服务
 reports/           真实模型评测报告与调用 trace
-examples/lesson01–lesson12/  课程实验（调用同一业务代码）
-docs/              逐课教材与求职材料
-tests/             业务、协议和集成测试（111 项）
+docs/              架构设计、本机使用说明、验证状态
+tests/             业务、协议和集成测试（113 项）
+assets/            界面截图
 ```
 
-完整设计与取舍见 [ARCHITECTURE.md](docs/ARCHITECTURE.md)，当前验证状态见 [STATUS.md](docs/STATUS.md)。
+完整设计与取舍见 [ARCHITECTURE.md](docs/ARCHITECTURE.md)，本机网页与数据库说明见 [LOCAL_WEB.md](docs/LOCAL_WEB.md)，验证状态与已知局限见 [STATUS.md](docs/STATUS.md)。
 
-## 本机网页与数据库历史
+## 说明
 
-见 [本机使用说明](docs/LOCAL_WEB.md)。网页由 Python 后端调用本地配置的模型 API，SQLite 保存会话和每次成功生成的快照；网页可恢复历史。有模型配置时新会话默认使用真实模型。
+本项目为个人学习作品，地点、天气、价格与资料**全部为虚构教学数据**，不构成真实旅行建议。代码由作者在 AI 辅助下完成并逐项实测验证；所有评测数字来自 `reports/` 中的原始报告，未做修饰。
+
+学习过程中使用的课程讲义、分课脚本与面试题库保存在本地 `notes/` 目录，**不纳入本仓库**。
+
+以 MIT 许可证开源，见 [LICENSE](LICENSE)。

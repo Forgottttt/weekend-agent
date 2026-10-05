@@ -92,4 +92,4 @@ ModelConfig按进程环境优先、项目.env其次读取配置；配置对象re
 
 APIProvider对输出截断先停止，不执行半截参数；错误按HTTP状态分类，429、5xx与网络异常使用有上限的退避。逻辑模型轮次与http_attempts分开记录。PlanningError携带失败前计数，评测汇总失败任务的请求与已收到usage；响应丢失时账单可能高于观测用量。
 
-官方DeepSeek仍固定非thinking模式；当前历史去除reasoning_content，因此尚不支持开启thinking后跨回合保存该协议字段。接入说明及官方依据见第11课。
+官方DeepSeek仍固定非thinking模式；当前历史去除reasoning_content，因此尚不支持开启thinking后跨回合保存该协议字段。接入说明与官方依据见 [README](../README.md) 的接入章节。

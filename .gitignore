@@ -14,3 +14,6 @@ outputs/
 *.sqlite3-shm
 *.sqlite3-wal
 .DS_Store
+
+# 本地学习材料：课程讲义、分课脚本与面试题库，不进入公开仓库
+notes/

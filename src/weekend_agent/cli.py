@@ -19,7 +19,6 @@ def parser():
     action = result.add_mutually_exclusive_group()
     action.add_argument("--serve", action="store_true", help="启动本地网页")
     action.add_argument("--evaluate", action="store_true", help="运行12个固定回归用例")
-    action.add_argument("--practice", action="store_true", help="运行面试问答练习")
     action.add_argument("--legacy-demo", action="store_true", help="第一版半天固定示例，供早期课程对照")
     action.add_argument("--doctor", action="store_true", help="离线检查模型配置，不联网、不显示密钥")
     action.add_argument("--check-api", action="store_true", help="两轮真实API请求，验证一次天气工具调用及结果回传，会消耗API额度")
@@ -29,8 +28,6 @@ def parser():
     result.add_argument("--suite", choices=["agent", "extraction", "retrieval", "citations", "all"],
                         default="agent", help="--evaluate 运行的评测套件，默认 agent")
     result.add_argument("--port", type=int, default=8765)
-    result.add_argument("--topic", default="tools")
-    result.add_argument("--count", type=int, default=3)
     result.add_argument("--budget", type=float, default=200)
     result.add_argument("--group-size", type=int, default=2)
     result.add_argument("--date", default="2026-11-21")
@@ -142,12 +139,6 @@ def main(argv=None):
             return 0
         if args.evaluate:
             return run_evaluate(args, mode)
-        if args.practice:
-            from .interview import practice
-            if not 1 <= args.count <= 20:
-                raise ValueError("练习题数必须在 1–20 之间")
-            practice(args.topic, args.count)
-            return 0
         if args.legacy_demo:
             from .agent import TripAgent
             from .providers import DemoProvider

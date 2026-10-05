@@ -6,6 +6,7 @@ from threading import BoundedSemaphore, Lock
 
 from .agent import TripAgent
 from .config import ModelConfig, PROJECT_ROOT
+from .longterm import MemoryStore, summarize_history
 from .memory import SessionStore, select_context
 from .planning import DayDemoProvider
 from .providers import APIProvider
@@ -28,14 +29,20 @@ class PlanningError(RuntimeError):
 class PlanningService:
     def __init__(self, database: Path | None = None):
         self.store = SessionStore(database or PROJECT_ROOT / "outputs" / "sessions.sqlite3")
+        # 长期记忆：结构化事实 + 旧回合摘要（见 longterm.py）。
+        self.memory = MemoryStore(self.store)
         self.slots = BoundedSemaphore(2)
         self.lock_guard = Lock()
         self.session_locks: dict[str, Lock] = {}
 
     def plan(self, values: dict, question: str = "请根据表单规划行程。",
              mode: str = "demo", session_id: str | None = None,
-             on_event=None) -> dict:
-        """生成一份方案。on_event 用于流式推送进度，不影响任何判定逻辑。"""
+             on_event=None, summarize: bool = False) -> dict:
+        """生成一份方案。on_event 用于流式推送进度，不影响任何判定逻辑。
+
+        summarize=True 时，把超出上下文窗口的旧回合压缩成摘要存起来（需要一次额外模型调用）；
+        默认关闭，因为事实类记忆已经由结构化的 request 免费提供。
+        """
         def notify(payload: dict) -> None:
             if on_event is not None:
                 on_event(payload)
@@ -71,6 +78,14 @@ class PlanningService:
             prior = saved["messages"]
             if prior:
                 agent.messages = select_context(prior)
+                # 长期记忆里的旧回合摘要插在系统提示之后，让模型在不膨胀上下文的前提下
+                # 仍然知道更早的偏好与已排除方案。
+                remembered = self.memory.load_summary(session_id)
+                if remembered:
+                    agent.messages.insert(1, {
+                        "role": "system",
+                        "content": "本会话较早内容的摘要（供参考，不得据此放宽当前表单约束）：\n"
+                                   + remembered["summary"]})
             retained = len(agent.messages)
             try:
                 run = agent.run(question, request, on_event=on_event)
@@ -94,6 +109,23 @@ class PlanningService:
                       "context_messages": retained}
             # 完整旧记录加本轮新消息；不把截断后的上下文当成完整历史。
             history = prior + agent.messages[retained:] if prior else agent.messages
+            # 先补齐 result 的全部字段再落盘：返回给调用方的字典必须与保存的快照完全一致，
+            # 否则网页实时显示与事后恢复会不一致。
+            # 事实直接取自已经通过校验的 TripRequest，不需要额外模型调用；
+            # 与旧值不同时自动覆盖并保留历史版本。
+            result["memory_changes"] = self.memory.remember(
+                session_id, request.to_dict(), source="form")
+            if summarize and mode == "live":
+                try:
+                    created = summarize_history(history, provider, keep_turns=3)
+                except (RuntimeError, ValueError) as error:
+                    # 摘要失败不应让整轮规划白做，记录下来即可。
+                    result["summary_error"] = str(error)
+                else:
+                    if created:
+                        summary_text, cutoff = created
+                        self.memory.save_summary(session_id, summary_text, cutoff)
+                        result["summary_updated"] = True
             self.store.save(session_id, history, request.to_dict(), result, saved["version"])
             return result
         finally:

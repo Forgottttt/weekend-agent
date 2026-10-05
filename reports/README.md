@@ -3,6 +3,8 @@
 本目录保存**真实 DeepSeek API 调用**产生的原始评测报告与调用 trace，用于替代口头声明。
 `outputs/` 是运行目录且被 Git 忽略，因此这里保留的是固化副本；文件内容未经人工修改。
 
+技术表述更正（2026-10-05，来源：本次源码讲解及[DeepSeek官方工具参数说明](https://api-docs.deepseek.com/api/create-chat-completion/)）：下文关于“工具调用保证合法JSON、格式问题消失”的历史解释过强。`submit_plan`把方案参数与解释文字分离，降低混合文本造成的解析失败，但参数仍须进行JSON解析、Schema与业务校验；当前没有启用strict模式。原始实验报告与trace保持不变。
+
 ## 运行环境
 
 | 项目 | 值 |

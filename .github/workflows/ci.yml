@@ -28,12 +28,20 @@ jobs:
         run: python3 main.py --evaluate
       - name: 检索评测（BM25 vs TF-IDF）
         run: python3 main.py --evaluate --suite retrieval
+      - name: 切片对照实验
+        run: python3 main.py --evaluate --suite chunking
+      - name: 检索方法对比（离线，跳过重排）
+        run: python3 main.py --evaluate --suite methods
 
       # 语料生成必须确定性：重新生成后不应产生任何差异。
       - name: 语料生成幂等性
         run: |
           PYTHONPATH=src python3 scripts/build_corpus.py
-          git diff --exit-code src/weekend_agent/data/guides.json src/weekend_agent/data/retrieval_cases.json
+          PYTHONPATH=src python3 scripts/build_long_corpus.py
+          git diff --exit-code src/weekend_agent/data/guides.json \
+            src/weekend_agent/data/retrieval_cases.json \
+            src/weekend_agent/data/guides_long.json \
+            src/weekend_agent/data/chunk_cases.json
 
       # stdio 服务不能污染 stdout，这是它的核心约束之一。
       - name: MCP stdio 服务只输出 JSON-RPC

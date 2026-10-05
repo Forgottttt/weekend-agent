@@ -25,7 +25,9 @@ def parser():
     action.add_argument("--ask", metavar="文本", help="用一句自然语言描述条件，由模型抽取槽位后规划（需要 --live）")
     result.add_argument("--answer", action="append", metavar="补充",
                         help="对澄清追问的补充回答，可重复；不提供时在终端交互追问")
-    result.add_argument("--suite", choices=["agent", "extraction", "retrieval", "citations", "all"],
+    result.add_argument("--suite",
+                        choices=["agent", "extraction", "retrieval", "chunking", "methods",
+                                 "citations", "all"],
                         default="agent", help="--evaluate 运行的评测套件，默认 agent")
     result.add_argument("--port", type=int, default=8765)
     result.add_argument("--budget", type=float, default=200)
@@ -102,6 +104,34 @@ def run_evaluate(args, mode: str) -> int:
         print(f"检索评测：{report['corpus_size']} 篇语料 / {report['case_count']} 条标注查询，top_k={report['top_k']}。")
         print(f"  BM25   recall@k {bm25['recall_at_k']:.1%}  MRR {bm25['mrr']:.3f}")
         print(f"  TF-IDF recall@k {tfidf['recall_at_k']:.1%}  MRR {tfidf['mrr']:.3f}")
+        print(report["limitations"])
+        print("报告：", report["report_path"])
+    if args.suite in ("chunking", "all"):
+        from .retrieval_eval import evaluate_chunking
+        report = evaluate_chunking(output_dir=args.output_dir)
+        print(f"切片对照：{report['corpus_size']} 篇长文档 / {report['case_count']} 条查询，"
+              f"chunk_size={report['chunk_size']}。")
+        for name, metrics in report["variants"].items():
+            print(f"  {name:<22} recall@k {metrics['recall_at_k']:.1%}  MRR {metrics['mrr']:.3f}"
+                  f"  检索单元 {metrics['unit_count']}")
+        print(report["limitations"])
+        print("报告：", report["report_path"])
+    if args.suite in ("methods", "all"):
+        rerank_provider = None
+        if mode == "live":
+            from .config import ModelConfig
+            from .providers import APIProvider
+            rerank_provider = APIProvider(ModelConfig.from_env())
+        from .retrieval_eval import evaluate_methods
+        report = evaluate_methods(output_dir=args.output_dir, rerank_provider=rerank_provider)
+        print(f"检索方法对比：{report['corpus_size']} 篇 / {report['case_count']} 条查询"
+              f"{'（含 LLM 重排）' if rerank_provider else '（离线，已跳过重排）'}。")
+        for name, metrics in report["methods"].items():
+            print(f"  {name:<18} {metrics['label']:<20} recall@k {metrics['recall_at_k']:.1%}"
+                  f"  MRR {metrics['mrr']:.3f}")
+        if rerank_provider:
+            print(f"  重排模型调用 {report['rerank_model_calls']} 次；"
+                  f"编造候选外 ID：{report['rerank_hallucinated_ids'] or '无'}")
         print(report["limitations"])
         print("报告：", report["report_path"])
     if args.suite in ("citations", "all"):

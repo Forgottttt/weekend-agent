@@ -7,6 +7,7 @@ from urllib.parse import urlparse, parse_qs
 
 from .service import BusyError, PlanningService
 from .diagnostics import doctor
+from .stats import collect_stats, collect_trace
 
 
 def create_server(port: int = 8765, service: PlanningService | None = None):
@@ -56,11 +57,26 @@ def create_server(port: int = 8765, service: PlanningService | None = None):
                                            "result": saved["result"], "version": saved["version"]})
                 except ValueError as error:
                     return self.send(404, {"error": str(error)})
+            if parsed.path == "/api/stats":
+                return self.send(200, collect_stats(service.store))
+            if parsed.path == "/api/trace":
+                # 观测面板只看已经存下来的快照；编号非法与不存在都按 404 处理。
+                raw_id = parse_qs(parsed.query).get("id", [""])[0]
+                try:
+                    run_id = int(raw_id)
+                except (TypeError, ValueError):
+                    return self.send(404, {"error": "生成记录编号不正确"})
+                try:
+                    return self.send(200, collect_trace(service.store, run_id))
+                except ValueError as error:
+                    return self.send(404, {"error": str(error)})
             filename = {"/": "index.html", "/app.js": "app.js", "/style.css": "style.css",
+                        "/trace": "trace.html", "/trace.js": "trace.js",
                         "/assets/hangzhou-west-lake.jpg": "assets/hangzhou-west-lake.jpg"}.get(parsed.path)
             if filename is None:
                 return self.send(404, {"error": "页面不存在"})
             mime = {"index.html": "text/html", "app.js": "text/javascript", "style.css": "text/css",
+                    "trace.html": "text/html", "trace.js": "text/javascript",
                     "assets/hangzhou-west-lake.jpg": "image/jpeg"}[filename]
             self.send(200, (web_root / filename).read_bytes(),
                       mime if mime.startswith("image/") else mime + "; charset=utf-8")
@@ -83,8 +99,8 @@ def create_server(port: int = 8765, service: PlanningService | None = None):
             """以 SSE 推送规划进度，最后推送完整结果。
 
             不发送 Content-Length：HTTP/1.0 下响应在写完后关闭连接，
-            前端用 fetch 的流式读取逐块解析。校验失败发生在发送响应头之前，
-            因此仍然能以正常 HTTP 错误返回。
+            前端用 fetch 的流式读取逐块解析。外层请求校验在响应头之前，
+            规划业务校验发生在响应头之后，通过 error 事件报告。
             """
             session_id = body.get("session_id")
             if session_id is not None and (not isinstance(session_id, str) or len(session_id) != 32):

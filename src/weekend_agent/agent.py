@@ -1,18 +1,20 @@
 """Agent 循环：请求模型 → 执行工具 → 带回结果 → 再请求模型。
 
 最终方案的交付通道是 `submit_plan` 工具调用，而不是"模型不再调用工具时的那段文字"。
-原因是结构性的：工具调用的 arguments 由接口保证是合法 JSON，因此模型**无法**把方案
-混在解释文字里、也无法加代码围栏。文本解析只作为兜底保留，是否被使用记录在
+工具调用把方案参数与解释文字分开，减少围栏和前置解释造成的解析问题。
+接口返回的 arguments 仍需解析、Schema 和业务校验，不能假设永远是合法 JSON。
+文本解析只作为兜底保留，是否被使用记录在
 RunResult.submitted_via 上，可以直接度量。
 """
 
 import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from time import perf_counter
 
 from .prompts import SYSTEM_PROMPT
 from .providers import ChatProvider
-from .tools import SUBMIT_PLAN_NAME, ToolRegistry
+from .tools import CONTROL_TOOLS, SUBMIT_PLAN_NAME, ToolRegistry
 from .finalize import render_plan, verify_final, verify_plan
 from .request import TripRequest
 
@@ -63,11 +65,15 @@ class _EventLog(list):
 
 class TripAgent:
     def __init__(self, provider: ChatProvider, registry: ToolRegistry,
-                 max_rounds: int = 8, max_tool_calls: int = 12):
+                 max_rounds: int = 8, max_tool_calls: int = 12, parallel_tools: bool = False):
         self.provider = provider
         self.registry = registry
         self.max_rounds = max_rounds
         self.max_tool_calls = max_tool_calls
+        # 同一轮里互不依赖的业务工具可以并发执行。**默认关闭**：
+        # 本项目的工具都是本地内存计算（微秒级），实测并发收益可忽略，
+        # 打开只增加线程调度与竞态风险。对外部慢工具（HTTP/RPC）才值得开。
+        self.parallel_tools = parallel_tools
         self.messages: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
         self.provider_calls = 0
         self.tool_calls = 0
@@ -144,6 +150,10 @@ class TripAgent:
                 self._remove_pending_message()
                 raise RuntimeError("达到工具调用上限；请缩小问题范围后重试。")
 
+            # 可选并发：先把互不依赖的业务工具跑完，再按原顺序处理结果，
+            # 这样事件顺序、白名单收集与计数口径都保持与串行一致。
+            parallel_results = self._execute_parallel(calls) if self.parallel_tools else {}
+
             for index, call in enumerate(calls):
                 name = call["function"]["name"]
                 raw = call["function"]["arguments"]
@@ -194,7 +204,9 @@ class TripAgent:
                                         last_check, plan, final_checks, input_tokens,
                                         output_tokens, SUBMIT_PLAN_NAME)
 
-                result = self.registry.execute(name, arguments)
+                result = parallel_results.get(index)
+                if result is None:
+                    result = self.registry.execute(name, arguments)
                 tool_count += 1
                 self.tool_calls = tool_count
                 if name == "check_itinerary":
@@ -207,6 +219,34 @@ class TripAgent:
                                "name": name, "arguments": arguments, "result": result})
                 self._answer_tool(call["id"], result)
         raise RuntimeError("达到模型调用轮数上限；本轮没有生成最终答案。")
+
+    def _execute_parallel(self, calls: list[dict]) -> dict[int, dict]:
+        """并发执行同一轮里互不依赖的业务工具，返回 {调用下标: 结果}。
+
+        只处理参数能解析的调用；参数损坏的调用留给串行路径处理，
+        以保持原有的错误语义与事件内容。`submit_plan` 是控制工具，必须串行。
+        """
+        tasks: dict[int, tuple[str, dict]] = {}
+        for index, call in enumerate(calls):
+            name = call["function"]["name"]
+            if name in CONTROL_TOOLS:
+                continue
+            try:
+                arguments = json.loads(call["function"]["arguments"],
+                                       parse_constant=_reject_constant)
+            except (ValueError, TypeError):
+                continue
+            tasks[index] = (name, arguments)
+        if len(tasks) < 2:
+            # 只有一个可并发的调用时，起线程池反而更慢。
+            return {}
+        results: dict[int, dict] = {}
+        with ThreadPoolExecutor(max_workers=min(4, len(tasks))) as pool:
+            futures = {pool.submit(self.registry.execute, name, args): index
+                       for index, (name, args) in tasks.items()}
+            for future in as_completed(futures):
+                results[futures[future]] = future.result()
+        return results
 
     def _answer_tool(self, call_id: str, result: dict) -> None:
         self.messages.append({"role": "tool", "tool_call_id": call_id,

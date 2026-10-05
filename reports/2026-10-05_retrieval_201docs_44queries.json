@@ -4,7 +4,7 @@
   "case_count": 44,
   "corpus_size": 201,
   "top_k": 5,
-  "generated_at": "2026-10-05T12:45:40",
+  "generated_at": "2026-10-05T19:24:20",
   "bm25": {
     "recall_at_k": 0.6705,
     "mrr": 0.7064,

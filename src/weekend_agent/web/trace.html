@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#173c32"><meta name="description" content="本机运行观测面板：把已经存下来的运行快照汇总成成功率、耗时、工具与失败归因，并查看单次运行的事件时间线。">
+  <title>运行观测面板 · 周末去哪玩</title>
+  <link rel="stylesheet" href="/style.css"><script defer src="/trace.js"></script>
+</head>
+<body>
+<header class="trace-hero">
+  <nav class="trace-nav page-width" aria-label="主导航">
+    <a class="brand" href="/"><span class="brand-icon" aria-hidden="true">w.</span><span>周末去哪玩<span class="brand-en">WEEKEND, WELL SPENT</span></span></a>
+    <a class="trace-back" href="/">回到规划页 ↗</a>
+  </nav>
+  <div class="page-width">
+    <span class="eyebrow">LOCAL OBSERVABILITY</span>
+    <h1 class="trace-title">运行观测面板</h1>
+    <p class="trace-sub">数据来自本机 SQLite 里的运行快照（plan_runs），只读不改。<br>全部地点、天气与费用均为虚构教学数据。</p>
+  </div>
+</header>
+<main class="page-width">
+  <div class="section-intro"><div><span class="section-kicker">AT A GLANCE</span><h2>最近这些运行怎么样</h2></div><p>默认统计最近 200 次运行快照。</p></div>
+  <section class="stats-grid" id="stat-cards" aria-label="汇总指标"></section>
+  <p class="trace-status" id="stats-note" role="status" aria-live="polite"></p>
+
+  <div class="stats-columns">
+    <section class="card" aria-labelledby="tool-heading">
+      <div class="card-heading"><div><span class="section-number">01 / 工具</span><h3 id="tool-heading">工具调用次数</h3></div><span class="small-note">来自 events</span></div>
+      <div class="bar-chart" id="tool-histogram"></div>
+    </section>
+    <section class="card" aria-labelledby="failure-heading">
+      <div class="card-heading"><div><span class="section-number">02 / 失败归因</span><h3 id="failure-heading">失败分类</h3></div><span class="small-note">按事件计数</span></div>
+      <div class="bar-chart" id="failure-histogram"></div>
+    </section>
+  </div>
+
+  <section class="card runs-card" aria-labelledby="runs-heading">
+    <div class="card-heading"><div><span class="section-number">03 / 运行</span><h3 id="runs-heading">最近运行</h3></div><span class="small-note">点击一行展开事件时间线</span></div>
+    <div class="run-rows" id="run-rows"></div>
+  </section>
+  <p class="trace-status" id="status" role="status" aria-live="polite">正在读取本机运行记录……</p>
+</main>
+<footer class="page-width"><div class="footer-top"><a class="footer-brand" href="/">周末去哪玩<span>把时间，花在喜欢的事上。</span></a><span>HANGZHOU · MADE FOR YOUR WEEKEND</span></div><div class="footer-bottom"><span>本机学习项目 · 观测面板只读取已经保存的运行快照。</span><span>行程地点为教学示例，请勿据此安排真实旅行。</span></div></footer>
+</body>
+</html>
